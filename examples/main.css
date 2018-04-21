@@ -1,0 +1,18 @@
+html {
+    height: 100%;
+  }
+  body {
+    min-height: 100%;
+	width: 100%;
+	
+  }
+
+#map{
+	position: absolute;
+	top:10px;
+	bottom:0;
+	left:10px;
+	right:0;
+    z-index: 0 !important;
+    pointer-events: all;
+}
