@@ -2,14 +2,11 @@ var webpack = require('webpack');
 var path = require('path');
 var nodeExternals = require('webpack-node-externals');
 
-const isProd = process.env.WEBPACK_MODE === "production";
-const outputName = isProd ? "index" : "index.min";
-
-module.exports = {
+module.exports = (env, options) => ({
   entry: path.resolve(__dirname, 'src/distortableVideoOverlay.js'),
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: `${outputName}.js`,
+    filename: `${options.mode !== "production" ? "index" : "index.min"}.js`,
     library: '',
     libraryTarget: 'umd'
   },
@@ -40,8 +37,5 @@ module.exports = {
       root: "L"
     },
     numeric: "numeric"
-  },
-  devServer: {
-    port: 3000
   }
-};
+});

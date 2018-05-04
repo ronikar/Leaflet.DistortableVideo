@@ -4,7 +4,7 @@
   "description": "Enable to distort videos on Leaflet maps.",
   "main": "dist/index.js",
   "scripts": {
-    "build": "./node_modules/.bin/webpack",
+    "build": "./node_modules/.bin/webpack --mode production && npm run build:dev",
     "build:dev": "./node_modules/.bin/webpack --mode development",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
