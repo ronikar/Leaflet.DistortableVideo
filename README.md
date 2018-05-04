@@ -7,7 +7,7 @@ https://ronikar.github.io/Leaflet.DistortableVideo/examples/
 ## Requirements
 * Leaflet 1.^
 * Numeric.js 1.2.6 
-* JQurey 
+* JQuery 
 
 ## Browser Compatibility
 Your browser must to support the next features
@@ -15,6 +15,15 @@ Your browser must to support the next features
 * matrix3d() css - https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/matrix3d
 
 ## Usage
+
+### Setup
+
+* Add script to html. You can use `index.js` or `index.min.js` in `./dist` folder. 
+```html
+<script src="distortableVideoOverlay.js"></script>
+```
+
+* You can also use `npm install leaflet-distortable-video` or `yarn add leaflet-distortable-video`.
 
 ### L.distortableVideo(videoUrl, corners, options)
 
@@ -52,3 +61,11 @@ var corners= {
 
 overlay.setCorners(corners);
 ```
+
+### Module Loaders
+The index file is builded by using `webpack`, in order to enable to use module loaders such as AMD and CommonJS. 
+
+
+## License
+MIT License (MIT)
+
