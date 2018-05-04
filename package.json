@@ -1,6 +1,6 @@
 {
   "name": "leaflet-distortable-video",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Enable to distort videos on Leaflet maps.",
   "main": "dist/index.js",
   "scripts": {
@@ -13,10 +13,10 @@
     "url": "git+https://github.com/ronikar/Leaflet.DistortableVideo.git"
   },
   "keywords": [
-    "leaflet"
+    "leaflet", "video", "maps"
   ],
   "author": "Roni Karilkar",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/ronikar/Leaflet.DistortableVideo/issues"
   },
