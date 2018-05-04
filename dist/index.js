@@ -104,6 +104,8 @@ var _jquery = _interopRequireDefault(__webpack_require__(/*! jquery */ "jquery")
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
   initialize: function initialize(element, bounds, options) {
     this._url = element;
@@ -151,8 +153,9 @@ var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
 
     var matrix3d = _findProjectiveMatrix(videoOrigin, videoTarget);
 
-    this._image.style['transform'] = _projectiveMatrixToCssValue(matrix3d);
-    this._image.style['transform-origin'] = '0 0 0px';
+    var videoElement = (0, _jquery.default)(this._image);
+    videoElement.css(_getCssTransform("transform", _projectiveMatrixToCssValue(matrix3d)));
+    videoElement.css(_getCssTransform("transform-origin", '0 0 0px'));
   },
   _reset: function _reset() {
     var _this2 = this;
@@ -198,7 +201,7 @@ var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
   }
 });
 
-var _getTargetCorners = function _getTargetCorners(geographicCorners, pixelicPositionProvider) {
+function _getTargetCorners(geographicCorners, pixelicPositionProvider) {
   var topLeft = geographicCorners.topLeft,
       topRight = geographicCorners.topRight,
       bottomLeft = geographicCorners.bottomLeft,
@@ -209,7 +212,9 @@ var _getTargetCorners = function _getTargetCorners(geographicCorners, pixelicPos
     bottomLeft: pixelicPositionProvider(bottomLeft),
     bottomRight: pixelicPositionProvider(bottomRight)
   };
-};
+}
+
+;
 
 function _getVideoCorners(videoElement) {
   var element = (0, _jquery.default)(videoElement);
@@ -281,6 +286,12 @@ function _projectiveMatrixToCssValue(matrix) {
   }
 
   return "matrix3d(".concat(matrixValues.join(','), ")");
+}
+
+function _getCssTransform(key, value) {
+  var _ref;
+
+  return _ref = {}, _defineProperty(_ref, "-webkit-" + key, value), _defineProperty(_ref, "-khtml-" + key, value), _defineProperty(_ref, "-moz-" + key, value), _defineProperty(_ref, "-ms-" + key, value), _defineProperty(_ref, "-o-" + key, value), _ref;
 }
 
 function distortableVideoOverlay(url, corners, options) {
