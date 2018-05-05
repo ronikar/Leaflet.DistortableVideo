@@ -5,14 +5,15 @@ Enable to distort videos on Leaflet maps. Leaflet.DistortableVideo allows for pe
 https://ronikar.github.io/Leaflet.DistortableVideo/examples/
 
 ## Requirements
+### Dependancies
 * Leaflet 1.^
 * Numeric.js 1.2.6 
 * JQuery 
 
-## Browser Compatibility
-Your browser must to support the next features
-* object-fit css for video element - https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit
-* matrix3d() css - https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/matrix3d
+### Browser Compatibility
+Your browser must support the next features
+* object-fit for video element - https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit
+* matrix3d() - https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/matrix3d
 
 ## Usage
 
