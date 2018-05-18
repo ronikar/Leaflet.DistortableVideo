@@ -29,19 +29,26 @@
 
         var mapBounds = [[32, -130], [13, -100]];
 
-        var corners= {
-            topLeft: L.latLng([30,-129]),
-            topRight: L.latLng([32,-100]),
-            bottomRight: L.latLng([13,-97]),
-            bottomLeft: L.latLng([13,-130])
-        }
+        var topLeft = L.latLng([30, -129]);
+        var topRight = L.latLng([32, -100]);
+        var bottomRight = L.latLng([13, -97]);
+        var bottomLeft = L.latLng([13, -130]);
+        var corners = { topLeft, topRight, bottomRight, bottomLeft };
 
         map.fitBounds(mapBounds);
 
-        let layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patricia_nasa.mp4", corners, {
+        var layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patricia_nasa.mp4", corners, {
             opacity: 0.8
         }).addTo(map);
 
+        function addMarker(point, text) {
+            L.marker(point).addTo(map).bindPopup(text);
+        }
+
+        addMarker(topLeft, "I'm topLeft :)");
+        addMarker(topRight, "I'm topRight :p");
+        addMarker(bottomRight, "I'm bottomRight :o");
+        addMarker(bottomLeft, "I'm bottomLeft <3");
     </script>
 
 </body>

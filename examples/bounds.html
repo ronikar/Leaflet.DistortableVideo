@@ -30,7 +30,7 @@
         mapBounds = [[32, -130], [13, -100]];
         map.fitBounds(mapBounds);
 
-        let layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patricia_nasa.mp4", mapBounds, {
+        var layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patricia_nasa.mp4", mapBounds, {
             opacity: 0.8
         }).addTo(map);
 
