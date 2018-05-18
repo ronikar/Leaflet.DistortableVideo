@@ -1,18 +1,19 @@
 # Leaflet.DistortableVideo
-Enable to distort videos on Leaflet maps. Leaflet.DistortableVideo allows for perspectival distortions of images, client-side, using CSS3 transformations in the DOM.
+Enable to distort videos on Leaflet maps. Leaflet.DistortableVideo allows for perspective distortions of images, client-side, using CSS3 transformations in the DOM.
 
 ## Demo
 https://ronikar.github.io/Leaflet.DistortableVideo/examples/
 
 ## Requirements
+### Dependancies
 * Leaflet 1.^
 * Numeric.js 1.2.6 
 * JQuery 
 
-## Browser Compatibility
-Your browser must to support the next features
-* object-fit css for video element - https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit
-* matrix3d() css - https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/matrix3d
+### Browser Compatibility
+Your browser must support the next features
+* object-fit for video element - https://developer.mozilla.org/en-US/docs/Web/CSS/object-fit
+* matrix3d() - https://developer.mozilla.org/en-US/docs/Web/CSS/transform-function/matrix3d
 
 ## Usage
 
@@ -63,7 +64,7 @@ overlay.setCorners(corners);
 ```
 
 ### Module Loaders
-The index file is builded by using `webpack`, in order to enable to use module loaders such as AMD and CommonJS. 
+The index file is built by using `webpack`, in order to enable to use module loaders such as AMD and CommonJS. 
 
 
 ## License
