@@ -39,14 +39,16 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
         const videoTarget = _getTargetCorners(corners, pixelicPositionProvider);
         const matrix3d = _findProjectiveMatrix(videoOrigin, videoTarget);
 
-        const videoElement = $(this._image)
-        videoElement.css(_getCssTransform("transform", _projectiveMatrixToCssValue(matrix3d)));
-        videoElement.css(_getCssTransform("transform-origin", '0 0 0px'));
+        const videoElement = $(this._image);
+        videoElement.css(_getCssWithPrefixes("transform", _projectiveMatrixToCssValue(matrix3d)));
+        videoElement.css(_getCssWithPrefixes("transform-origin", '0 0 0px'));
     },
 
     _reset: function () {
         const image = this._image;
         const mapElement = $(this._map.getContainer());
+
+        $(image).css(_getCssWithPrefixes("transition", "width 0.05s"));
         image.style.width = mapElement.width() + 'px';
         image.style.height = mapElement.height() + 'px';
 
@@ -149,13 +151,14 @@ function _projectiveMatrixToCssValue(matrix) {
     return `matrix3d(${matrixValues.join(',')})`;
 }
 
-function _getCssTransform(key, value) {
+function _getCssWithPrefixes(key, value) {
     return {
         ["-webkit-" + key]: value,
         ["-khtml-" + key]: value,
         ["-moz-" + key]: value,
         ["-ms-" + key]: value,
-        ["-o-" + key]: value
+        ["-o-" + key]: value,
+        [key]: value
     };
 }
 

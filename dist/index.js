@@ -154,14 +154,15 @@ var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
     var matrix3d = _findProjectiveMatrix(videoOrigin, videoTarget);
 
     var videoElement = (0, _jquery.default)(this._image);
-    videoElement.css(_getCssTransform("transform", _projectiveMatrixToCssValue(matrix3d)));
-    videoElement.css(_getCssTransform("transform-origin", '0 0 0px'));
+    videoElement.css(_getCssWithPrefixes("transform", _projectiveMatrixToCssValue(matrix3d)));
+    videoElement.css(_getCssWithPrefixes("transform-origin", '0 0 0px'));
   },
   _reset: function _reset() {
     var _this2 = this;
 
     var image = this._image;
     var mapElement = (0, _jquery.default)(this._map.getContainer());
+    (0, _jquery.default)(image).css(_getCssWithPrefixes("transition", "width 0.05s"));
     image.style.width = mapElement.width() + 'px';
     image.style.height = mapElement.height() + 'px';
 
@@ -288,10 +289,10 @@ function _projectiveMatrixToCssValue(matrix) {
   return "matrix3d(".concat(matrixValues.join(','), ")");
 }
 
-function _getCssTransform(key, value) {
+function _getCssWithPrefixes(key, value) {
   var _ref;
 
-  return _ref = {}, _defineProperty(_ref, "-webkit-" + key, value), _defineProperty(_ref, "-khtml-" + key, value), _defineProperty(_ref, "-moz-" + key, value), _defineProperty(_ref, "-ms-" + key, value), _defineProperty(_ref, "-o-" + key, value), _ref;
+  return _ref = {}, _defineProperty(_ref, "-webkit-" + key, value), _defineProperty(_ref, "-khtml-" + key, value), _defineProperty(_ref, "-moz-" + key, value), _defineProperty(_ref, "-ms-" + key, value), _defineProperty(_ref, "-o-" + key, value), _defineProperty(_ref, key, value), _ref;
 }
 
 function distortableVideoOverlay(url, corners, options) {
