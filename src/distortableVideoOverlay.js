@@ -5,8 +5,7 @@ import $ from "jquery";
 const DistortableVideoOverlay = L.VideoOverlay.extend({
     initialize: function (element, bounds, options) {
         this._url = element;
-        this._bounds = this._isCorners(bounds) ? bounds : this._boundsToCorners(bounds);
-
+        this._bounds = this._getCorners(bounds);
         L.Util.setOptions(this, options);
     },
 
@@ -15,7 +14,7 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
     },
 
     setCorners: function (corners) {
-        this._bounds = corners;
+        this._bounds = this._getCorners(corners);
 
         if (this._map) {
             this._reset();
@@ -65,6 +64,12 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
         this._image.style['objectFit'] = 'fill';
     },
 
+    _getCorners: function(value){
+        if (this._isCorners(value)) return value;
+        if (this._isPointArray(value)) return this._pointArrayToCorners(value);
+        return this._boundsToCorners(value);
+    },
+
     _boundsToCorners: function (bounds) {
         bounds = L.latLngBounds(bounds);
 
@@ -76,10 +81,22 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
         };
     },
 
+    _pointArrayToCorners: function (points) {
+        const [topLeft, topRight, bottomRight, bottomLeft] = points;
+        return { topLeft, topRight, bottomRight, bottomLeft };
+    },
+
     _isCorners: function (value) {
         const { topLeft, topRight, bottomLeft, bottomRight } = value;
 
         return !!topLeft && !!topRight && !!bottomLeft && !!bottomRight;
+    },
+
+    _isPointArray: function (value) {
+        if (!Array.isArray(value)) return false;
+
+        const [topLeft, topRight, bottomRight, bottomLeft] = value;
+        return !!topLeft && !!topRight && !!bottomRight && !!bottomLeft;
     }
 });
 

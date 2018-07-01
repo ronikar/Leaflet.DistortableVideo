@@ -106,10 +106,18 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
 var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
   initialize: function initialize(element, bounds, options) {
     this._url = element;
-    this._bounds = this._isCorners(bounds) ? bounds : this._boundsToCorners(bounds);
+    this._bounds = this._getCorners(bounds);
 
     _leaflet.default.Util.setOptions(this, options);
   },
@@ -117,7 +125,7 @@ var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
     return this.setCorners(this._boundsToCorners(bounds));
   },
   setCorners: function setCorners(corners) {
-    this._bounds = corners;
+    this._bounds = this._getCorners(corners);
 
     if (this._map) {
       this._reset();
@@ -184,6 +192,11 @@ var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
 
     this._image.style['objectFit'] = 'fill';
   },
+  _getCorners: function _getCorners(value) {
+    if (this._isCorners(value)) return value;
+    if (this._isPointArray(value)) return this._pointArrayToCorners(value);
+    return this._boundsToCorners(value);
+  },
   _boundsToCorners: function _boundsToCorners(bounds) {
     bounds = _leaflet.default.latLngBounds(bounds);
     return {
@@ -193,12 +206,37 @@ var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
       bottomRight: bounds.getSouthEast()
     };
   },
+  _pointArrayToCorners: function _pointArrayToCorners(points) {
+    var _points = _slicedToArray(points, 4),
+        topLeft = _points[0],
+        topRight = _points[1],
+        bottomRight = _points[2],
+        bottomLeft = _points[3];
+
+    return {
+      topLeft: topLeft,
+      topRight: topRight,
+      bottomRight: bottomRight,
+      bottomLeft: bottomLeft
+    };
+  },
   _isCorners: function _isCorners(value) {
     var topLeft = value.topLeft,
         topRight = value.topRight,
         bottomLeft = value.bottomLeft,
         bottomRight = value.bottomRight;
     return !!topLeft && !!topRight && !!bottomLeft && !!bottomRight;
+  },
+  _isPointArray: function _isPointArray(value) {
+    if (!Array.isArray(value)) return false;
+
+    var _value = _slicedToArray(value, 4),
+        topLeft = _value[0],
+        topRight = _value[1],
+        bottomRight = _value[2],
+        bottomLeft = _value[3];
+
+    return !!topLeft && !!topRight && !!bottomRight && !!bottomLeft;
   }
 });
 

@@ -48,6 +48,20 @@ let layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patric
 `topLeft`, `topRight`, `bottomLeft` and `bottomRight` are instances of `L.LatLng`, corresponding
 to the locations of the corners of the video. `corners` can be also `L.LatlngBounds` in factory method.
 
+`Corners` can be also array of points. The order of the points is `topLeft`, `topRight`, `bottomRight` and `bottomLeft`.
+
+```js
+var topLeft = L.latLng([30, -129]);
+var topRight = L.latLng([32, -100]);
+var bottomRight = L.latLng([13, -97]);
+var bottomLeft = L.latLng([13, -130]);
+var corners = [topLeft, topRight, bottomRight, bottomLeft];
+
+let layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patricia_nasa.mp4", corners, {
+  opacity: 0.8
+}).addTo(map);
+```
+
 ### setCorners(corners)
 
 This function enables to relocate the video on the map, for example: 
