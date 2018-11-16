@@ -34,13 +34,41 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
 
     _projectVideoOnMap: function (pixelicPositionProvider) {
         const corners = this._bounds;
+        const videoElement = $(this._image);
         const videoOrigin = _getVideoCorners(this._image);
         const videoTarget = _getTargetCorners(corners, pixelicPositionProvider);
-        const matrix3d = _findProjectiveMatrix(videoOrigin, videoTarget);
 
-        const videoElement = $(this._image);
-        videoElement.css(_getCssWithPrefixes("transform", _projectiveMatrixToCssValue(matrix3d)));
+        const cssTransformValue = _areSomeCornersEqual(videoTarget) ? this._projectAsRectangle(videoTarget) :
+            this._projectWithProjectiveMatrix(videoOrigin, videoTarget);
+
+        videoElement.css(_getCssWithPrefixes("transform", cssTransformValue));
         videoElement.css(_getCssWithPrefixes("transform-origin", '0 0 0px'));
+    },
+
+    _projectWithProjectiveMatrix: function (origin, target) {
+        const matrix3d = _findProjectiveMatrix(origin, target);
+        return _projectiveMatrixToCssValue(matrix3d);
+    },
+
+    _projectAsRectangle: function (target) {
+        const videoElement = $(this._image);
+        const xCoordinates = _getXCoordinates(target);
+        const yCoordinates = _getYCoordinates(target);
+
+        const minX = Math.min(...xCoordinates);
+        const maxX = Math.max(...xCoordinates);
+        const minY = Math.min(...yCoordinates);
+        const maxY = Math.max(...yCoordinates);
+
+        const size = {
+            x: maxX - minX,
+            y: maxY - minY
+        };
+
+        const scale = `scale3d(${size.x / videoElement.width()}, ${size.y / videoElement.height()}, 1)`;
+        const translate = `translate3d(${minX}px, ${minY}px, 0px)`;
+
+        return `${translate} ${scale}`;
     },
 
     _reset: function () {
@@ -64,7 +92,7 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
         this._image.style['objectFit'] = 'fill';
     },
 
-    _getCorners: function(value){
+    _getCorners: function (value) {
         if (this._isCorners(value)) return value;
         if (this._isPointArray(value)) return this._pointArrayToCorners(value);
         return this._boundsToCorners(value);
@@ -127,6 +155,33 @@ function _getVideoCorners(videoElement) {
     const bottomLeft = { x: left, y: bottom };
 
     return { topLeft, topRight, bottomRight, bottomLeft };
+}
+
+function _areSomeCornersEqual(corners) {
+    const { topLeft, topRight, bottomRight, bottomLeft } = corners;
+
+    if (_areCornersEqual(topLeft, topRight)) return true;
+
+    const arr = [topLeft, topRight];
+    if (arr.some(corner => _areCornersEqual(corner, bottomRight))) return true;
+
+    arr.push(bottomRight);
+
+    return arr.some(corner => _areCornersEqual(corner, bottomLeft));
+}
+
+function _areCornersEqual(corner, otherCorner) {
+    return corner.x === otherCorner.x && corner.y === otherCorner.y;
+}
+
+function _getXCoordinates(corners) {
+    const { topLeft, topRight, bottomRight, bottomLeft } = corners;
+    return [topLeft.x, topRight.x, bottomRight.x, bottomLeft.x];
+}
+
+function _getYCoordinates(corners) {
+    const { topLeft, topRight, bottomRight, bottomLeft } = corners;
+    return [topLeft.y, topRight.y, bottomRight.y, bottomLeft.y];
 }
 
 function _findProjectiveMatrix(origin, target) {
