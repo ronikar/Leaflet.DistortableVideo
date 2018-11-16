@@ -114,6 +114,14 @@ function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = 
 
 function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+
+function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+
 var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
   initialize: function initialize(element, bounds, options) {
     this._url = element;
@@ -154,16 +162,39 @@ var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
   },
   _projectVideoOnMap: function _projectVideoOnMap(pixelicPositionProvider) {
     var corners = this._bounds;
+    var videoElement = (0, _jquery.default)(this._image);
 
     var videoOrigin = _getVideoCorners(this._image);
 
     var videoTarget = _getTargetCorners(corners, pixelicPositionProvider);
 
-    var matrix3d = _findProjectiveMatrix(videoOrigin, videoTarget);
-
-    var videoElement = (0, _jquery.default)(this._image);
-    videoElement.css(_getCssWithPrefixes("transform", _projectiveMatrixToCssValue(matrix3d)));
+    var cssTransformValue = _areSomeCornersEqual(videoTarget) ? this._projectAsRectangle(videoTarget) : this._projectWithProjectiveMatrix(videoOrigin, videoTarget);
+    videoElement.css(_getCssWithPrefixes("transform", cssTransformValue));
     videoElement.css(_getCssWithPrefixes("transform-origin", '0 0 0px'));
+  },
+  _projectWithProjectiveMatrix: function _projectWithProjectiveMatrix(origin, target) {
+    var matrix3d = _findProjectiveMatrix(origin, target);
+
+    return _projectiveMatrixToCssValue(matrix3d);
+  },
+  _projectAsRectangle: function _projectAsRectangle(target) {
+    var videoElement = (0, _jquery.default)(this._image);
+
+    var xCoordinates = _getXCoordinates(target);
+
+    var yCoordinates = _getYCoordinates(target);
+
+    var minX = Math.min.apply(Math, _toConsumableArray(xCoordinates));
+    var maxX = Math.max.apply(Math, _toConsumableArray(xCoordinates));
+    var minY = Math.min.apply(Math, _toConsumableArray(yCoordinates));
+    var maxY = Math.max.apply(Math, _toConsumableArray(yCoordinates));
+    var size = {
+      x: maxX - minX,
+      y: maxY - minY
+    };
+    var scale = "scale3d(".concat(size.x / videoElement.width(), ", ").concat(size.y / videoElement.height(), ", 1)");
+    var translate = "translate3d(".concat(minX, "px, ").concat(minY, "px, 0px)");
+    return "".concat(translate, " ").concat(scale);
   },
   _reset: function _reset() {
     var _this2 = this;
@@ -285,6 +316,42 @@ function _getVideoCorners(videoElement) {
     bottomRight: bottomRight,
     bottomLeft: bottomLeft
   };
+}
+
+function _areSomeCornersEqual(corners) {
+  var topLeft = corners.topLeft,
+      topRight = corners.topRight,
+      bottomRight = corners.bottomRight,
+      bottomLeft = corners.bottomLeft;
+  if (_areCornersEqual(topLeft, topRight)) return true;
+  var arr = [topLeft, topRight];
+  if (arr.some(function (corner) {
+    return _areCornersEqual(corner, bottomRight);
+  })) return true;
+  arr.push(bottomRight);
+  return arr.some(function (corner) {
+    return _areCornersEqual(corner, bottomLeft);
+  });
+}
+
+function _areCornersEqual(corner, otherCorner) {
+  return corner.x === otherCorner.x && corner.y === otherCorner.y;
+}
+
+function _getXCoordinates(corners) {
+  var topLeft = corners.topLeft,
+      topRight = corners.topRight,
+      bottomRight = corners.bottomRight,
+      bottomLeft = corners.bottomLeft;
+  return [topLeft.x, topRight.x, bottomRight.x, bottomLeft.x];
+}
+
+function _getYCoordinates(corners) {
+  var topLeft = corners.topLeft,
+      topRight = corners.topRight,
+      bottomRight = corners.bottomRight,
+      bottomLeft = corners.bottomLeft;
+  return [topLeft.y, topRight.y, bottomRight.y, bottomLeft.y];
 }
 
 function _findProjectiveMatrix(origin, target) {
