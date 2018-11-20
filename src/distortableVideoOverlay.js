@@ -24,22 +24,22 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
 
     _animateZoom: function (e) {
         const { zoom, center } = e;
+        const origin = _getElementCorners(this.image);
         const pixelicPositionProvider = (point) => {
             const { x, y } = this._map._latLngToNewLayerPoint(point, zoom, center);
             return { x: Math.round(x), y: Math.round(y) }
         };
 
-        this._projectVideoOnMap(pixelicPositionProvider);
+        this._projectVideoOnMap(origin, pixelicPositionProvider);
     },
 
-    _projectVideoOnMap: function (pixelicPositionProvider) {
+    _projectVideoOnMap: function (origin, pixelicPositionProvider) {
         const corners = this._bounds;
         const videoElement = $(this._image);
-        const videoOrigin = _getVideoCorners(this._image);
-        const videoTarget = _getTargetCorners(corners, pixelicPositionProvider);
+        const target = _getTargetCorners(corners, pixelicPositionProvider);
 
-        const cssTransformValue = _areSomeCornersEqual(videoTarget) ? this._projectAsRectangle(videoTarget) :
-            this._projectWithProjectiveMatrix(videoOrigin, videoTarget);
+        const cssTransformValue = _areSomeCornersEqual(target) ? this._projectAsRectangle(target) :
+            this._projectWithProjectiveMatrix(origin, target);
 
         videoElement.css(_getCssWithPrefixes("transform", cssTransformValue));
         videoElement.css(_getCssWithPrefixes("transform-origin", '0 0 0px'));
@@ -73,18 +73,19 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
 
     _reset: function () {
         const image = this._image;
-        const mapElement = $(this._map.getContainer());
+        const map = this._map.getContainer();
 
         $(image).css(_getCssWithPrefixes("transition", "width 0.05s"));
-        image.style.width = mapElement.width() + 'px';
-        image.style.height = mapElement.height() + 'px';
+        image.style.width = $(map).width() + 'px';
+        image.style.height = $(map).height() + 'px';
 
+        const originAfterReset = _getElementCorners(map);
         const pixelicPositionProvider = (point) => {
             const { x, y } = this._map.latLngToLayerPoint(point);
             return { x: Math.round(x), y: Math.round(y) }
         };
 
-        this._projectVideoOnMap(pixelicPositionProvider);
+        this._projectVideoOnMap(originAfterReset, pixelicPositionProvider);
     },
 
     _initImage: function () {
@@ -139,17 +140,16 @@ function _getTargetCorners(geographicCorners, pixelicPositionProvider) {
     }
 };
 
-function _getVideoCorners(videoElement) {
-    const element = $(videoElement);
-    const height = element.height();
-    const width = element.width();
+function _getElementCorners(element) {
+    const jElement = $(element);
+    return _calculateRectangleCorners({ x: 0, y: 0 }, jElement.height(), jElement.width());
+}
 
-    const top = 0;
-    const left = 0;
+function _calculateRectangleCorners(topLeft, height, width) {
+    const { x: left, y: top } = topLeft;
     const right = left + width;
     const bottom = top + height;
 
-    const topLeft = { x: left, y: top };
     const topRight = { x: right, y: top };
     const bottomRight = { x: right, y: bottom };
     const bottomLeft = { x: left, y: bottom };
