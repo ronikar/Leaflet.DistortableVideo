@@ -96,15 +96,17 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = distortableVideoOverlay;
 
-var _numeric = _interopRequireDefault(__webpack_require__(/*! numeric */ "numeric"));
-
 var _leaflet = _interopRequireDefault(__webpack_require__(/*! leaflet */ "leaflet"));
 
 var _jquery = _interopRequireDefault(__webpack_require__(/*! jquery */ "jquery"));
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var _projections = __webpack_require__(/*! ./utility/projections */ "./src/utility/projections.js");
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+var _corners = __webpack_require__(/*! ./utility/corners */ "./src/utility/corners.js");
+
+var _css = __webpack_require__(/*! ./utility/css */ "./src/utility/css.js");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
 
@@ -141,90 +143,90 @@ var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
 
     return this;
   },
-  _animateZoom: function _animateZoom(e) {
-    var _this = this;
-
-    var zoom = e.zoom,
-        center = e.center;
-
-    var pixelicPositionProvider = function pixelicPositionProvider(point) {
-      var _this$_map$_latLngToN = _this._map._latLngToNewLayerPoint(point, zoom, center),
-          x = _this$_map$_latLngToN.x,
-          y = _this$_map$_latLngToN.y;
-
-      return {
-        x: Math.round(x),
-        y: Math.round(y)
-      };
-    };
-
-    this._projectVideoOnMap(pixelicPositionProvider);
-  },
-  _projectVideoOnMap: function _projectVideoOnMap(pixelicPositionProvider) {
-    var corners = this._bounds;
-    var videoElement = (0, _jquery.default)(this._image);
-
-    var videoOrigin = _getVideoCorners(this._image);
-
-    var videoTarget = _getTargetCorners(corners, pixelicPositionProvider);
-
-    var cssTransformValue = _areSomeCornersEqual(videoTarget) ? this._projectAsRectangle(videoTarget) : this._projectWithProjectiveMatrix(videoOrigin, videoTarget);
-    videoElement.css(_getCssWithPrefixes("transform", cssTransformValue));
-    videoElement.css(_getCssWithPrefixes("transform-origin", '0 0 0px'));
-  },
-  _projectWithProjectiveMatrix: function _projectWithProjectiveMatrix(origin, target) {
-    var matrix3d = _findProjectiveMatrix(origin, target);
-
-    return _projectiveMatrixToCssValue(matrix3d);
-  },
-  _projectAsRectangle: function _projectAsRectangle(target) {
-    var videoElement = (0, _jquery.default)(this._image);
-
-    var xCoordinates = _getXCoordinates(target);
-
-    var yCoordinates = _getYCoordinates(target);
-
-    var minX = Math.min.apply(Math, _toConsumableArray(xCoordinates));
-    var maxX = Math.max.apply(Math, _toConsumableArray(xCoordinates));
-    var minY = Math.min.apply(Math, _toConsumableArray(yCoordinates));
-    var maxY = Math.max.apply(Math, _toConsumableArray(yCoordinates));
-    var size = {
-      x: maxX - minX,
-      y: maxY - minY
-    };
-    var scale = "scale3d(".concat(size.x / videoElement.width(), ", ").concat(size.y / videoElement.height(), ", 1)");
-    var translate = "translate3d(".concat(minX, "px, ").concat(minY, "px, 0px)");
-    return "".concat(translate, " ").concat(scale);
-  },
-  _reset: function _reset() {
-    var _this2 = this;
-
-    var image = this._image;
-    var mapElement = (0, _jquery.default)(this._map.getContainer());
-    (0, _jquery.default)(image).css(_getCssWithPrefixes("transition", "width 0.05s"));
-    image.style.width = mapElement.width() + 'px';
-    image.style.height = mapElement.height() + 'px';
-
-    var pixelicPositionProvider = function pixelicPositionProvider(point) {
-      var _this2$_map$latLngToL = _this2._map.latLngToLayerPoint(point),
-          x = _this2$_map$latLngToL.x,
-          y = _this2$_map$latLngToL.y;
-
-      return {
-        x: Math.round(x),
-        y: Math.round(y)
-      };
-    };
-
-    this._projectVideoOnMap(pixelicPositionProvider);
-  },
   _initImage: function _initImage() {
     _leaflet.default.VideoOverlay.prototype._initImage.call(this);
 
     this._image.style['objectFit'] = 'fill';
   },
+  _reset: function _reset() {
+    var _this = this;
+
+    var image = this._image;
+
+    var map = this._map.getContainer();
+
+    (0, _jquery.default)(image).css((0, _css.getCssWithPrefixes)("transition", "width 0.05s"));
+    image.style.width = (0, _jquery.default)(map).width() + 'px';
+    image.style.height = (0, _jquery.default)(map).height() + 'px';
+    var originAfterReset = (0, _corners.getElementCorners)(map);
+
+    var pixelicPositionProvider = function pixelicPositionProvider(point) {
+      var _this$_map$latLngToLa = _this._map.latLngToLayerPoint(point),
+          x = _this$_map$latLngToLa.x,
+          y = _this$_map$latLngToLa.y;
+
+      return {
+        x: Math.round(x),
+        y: Math.round(y)
+      };
+    };
+
+    this._projectVideoOnMap(originAfterReset, pixelicPositionProvider);
+  },
+  _animateZoom: function _animateZoom(e) {
+    var _this2 = this;
+
+    var zoom = e.zoom,
+        center = e.center;
+    var videoPosition = (0, _corners.getElementCorners)(this.image);
+
+    var pixelicPositionProvider = function pixelicPositionProvider(point) {
+      var _this2$_map$_latLngTo = _this2._map._latLngToNewLayerPoint(point, zoom, center),
+          x = _this2$_map$_latLngTo.x,
+          y = _this2$_map$_latLngTo.y;
+
+      return {
+        x: Math.round(x),
+        y: Math.round(y)
+      };
+    };
+
+    this._projectVideoOnMap(videoPosition, pixelicPositionProvider);
+  },
+  _projectVideoOnMap: function _projectVideoOnMap(origin, pixelicPositionProvider) {
+    var corners = this._bounds;
+    var videoElement = (0, _jquery.default)(this._image);
+
+    var target = _getTargetCorners(corners, pixelicPositionProvider);
+
+    var cssTransformValue = (0, _corners.areSomeCornersEqual)(target) ? this._projectAsRectangle(target) : this._projectWithProjectiveMatrix(origin, target);
+    videoElement.css((0, _css.getCssWithPrefixes)("transform", cssTransformValue));
+    videoElement.css((0, _css.getCssWithPrefixes)("transform-origin", '0 0 0px'));
+  },
+  _projectWithProjectiveMatrix: function _projectWithProjectiveMatrix(origin, target) {
+    var matrix3d = (0, _projections.findProjectiveMatrix)(origin, target);
+    return (0, _css.projectiveMatrixToCssValue)(matrix3d);
+  },
+  _projectAsRectangle: function _projectAsRectangle(target) {
+    var videoElement = (0, _jquery.default)(this._image);
+    var xCoordinates = (0, _corners.getXCoordinates)(target);
+    var yCoordinates = (0, _corners.getYCoordinates)(target);
+    var minX = Math.min.apply(Math, _toConsumableArray(xCoordinates));
+    var maxX = Math.max.apply(Math, _toConsumableArray(xCoordinates));
+    var minY = Math.min.apply(Math, _toConsumableArray(yCoordinates));
+    var maxY = Math.max.apply(Math, _toConsumableArray(yCoordinates));
+    var size = {
+      height: videoElement.height(),
+      width: videoElement.width()
+    };
+    var afterScalingSize = {
+      height: maxY - minY,
+      width: maxX - minX
+    };
+    return "".concat((0, _css.getTranslate3dCssValue)(minX, minY), " ").concat((0, _css.getScale3dCssValue)(size, afterScalingSize));
+  },
   _getCorners: function _getCorners(value) {
-    if (this._isCorners(value)) return value;
+    if ((0, _corners.isCorners)(value)) return value;
     if (this._isPointArray(value)) return this._pointArrayToCorners(value);
     return this._boundsToCorners(value);
   },
@@ -250,13 +252,6 @@ var DistortableVideoOverlay = _leaflet.default.VideoOverlay.extend({
       bottomRight: bottomRight,
       bottomLeft: bottomLeft
     };
-  },
-  _isCorners: function _isCorners(value) {
-    var topLeft = value.topLeft,
-        topRight = value.topRight,
-        bottomLeft = value.bottomLeft,
-        bottomRight = value.bottomRight;
-    return !!topLeft && !!topRight && !!bottomLeft && !!bottomRight;
   },
   _isPointArray: function _isPointArray(value) {
     if (!Array.isArray(value)) return false;
@@ -286,18 +281,57 @@ function _getTargetCorners(geographicCorners, pixelicPositionProvider) {
 
 ;
 
-function _getVideoCorners(videoElement) {
-  var element = (0, _jquery.default)(videoElement);
-  var height = element.height();
-  var width = element.width();
-  var top = 0;
-  var left = 0;
+function distortableVideoOverlay(url, corners, options) {
+  return new DistortableVideoOverlay(url, corners, options);
+}
+
+_leaflet.default.DistortableVideoOverlay = DistortableVideoOverlay;
+_leaflet.default.distortableVideoOverlay = distortableVideoOverlay;
+
+/***/ }),
+
+/***/ "./src/utility/corners.js":
+/*!********************************!*\
+  !*** ./src/utility/corners.js ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isCorners = isCorners;
+exports.getElementCorners = getElementCorners;
+exports.calculateRectangleCorners = calculateRectangleCorners;
+exports.areSomeCornersEqual = areSomeCornersEqual;
+exports.areCornersEqual = areCornersEqual;
+exports.getXCoordinates = getXCoordinates;
+exports.getYCoordinates = getYCoordinates;
+
+function isCorners(value) {
+  var topLeft = value.topLeft,
+      topRight = value.topRight,
+      bottomLeft = value.bottomLeft,
+      bottomRight = value.bottomRight;
+  return !!topLeft && !!topRight && !!bottomLeft && !!bottomRight;
+}
+
+function getElementCorners(element) {
+  var jElement = $(element);
+  return calculateRectangleCorners({
+    x: 0,
+    y: 0
+  }, jElement.height(), jElement.width());
+}
+
+function calculateRectangleCorners(topLeft, height, width) {
+  var left = topLeft.x,
+      top = topLeft.y;
   var right = left + width;
   var bottom = top + height;
-  var topLeft = {
-    x: left,
-    y: top
-  };
   var topRight = {
     x: right,
     y: top
@@ -318,27 +352,27 @@ function _getVideoCorners(videoElement) {
   };
 }
 
-function _areSomeCornersEqual(corners) {
+function areSomeCornersEqual(corners) {
   var topLeft = corners.topLeft,
       topRight = corners.topRight,
       bottomRight = corners.bottomRight,
       bottomLeft = corners.bottomLeft;
-  if (_areCornersEqual(topLeft, topRight)) return true;
+  if (areCornersEqual(topLeft, topRight)) return true;
   var arr = [topLeft, topRight];
   if (arr.some(function (corner) {
-    return _areCornersEqual(corner, bottomRight);
+    return areCornersEqual(corner, bottomRight);
   })) return true;
   arr.push(bottomRight);
   return arr.some(function (corner) {
-    return _areCornersEqual(corner, bottomLeft);
+    return areCornersEqual(corner, bottomLeft);
   });
 }
 
-function _areCornersEqual(corner, otherCorner) {
+function areCornersEqual(corner, otherCorner) {
   return corner.x === otherCorner.x && corner.y === otherCorner.y;
 }
 
-function _getXCoordinates(corners) {
+function getXCoordinates(corners) {
   var topLeft = corners.topLeft,
       topRight = corners.topRight,
       bottomRight = corners.bottomRight,
@@ -346,7 +380,7 @@ function _getXCoordinates(corners) {
   return [topLeft.x, topRight.x, bottomRight.x, bottomLeft.x];
 }
 
-function _getYCoordinates(corners) {
+function getYCoordinates(corners) {
   var topLeft = corners.topLeft,
       topRight = corners.topRight,
       bottomRight = corners.bottomRight,
@@ -354,7 +388,77 @@ function _getYCoordinates(corners) {
   return [topLeft.y, topRight.y, bottomRight.y, bottomLeft.y];
 }
 
-function _findProjectiveMatrix(origin, target) {
+/***/ }),
+
+/***/ "./src/utility/css.js":
+/*!****************************!*\
+  !*** ./src/utility/css.js ***!
+  \****************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.getCssWithPrefixes = getCssWithPrefixes;
+exports.projectiveMatrixToCssValue = projectiveMatrixToCssValue;
+exports.getScale3dCssValue = getScale3dCssValue;
+exports.getTranslate3dCssValue = getTranslate3dCssValue;
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function getCssWithPrefixes(key, value) {
+  var _ref;
+
+  return _ref = {}, _defineProperty(_ref, "-webkit-" + key, value), _defineProperty(_ref, "-khtml-" + key, value), _defineProperty(_ref, "-moz-" + key, value), _defineProperty(_ref, "-ms-" + key, value), _defineProperty(_ref, "-o-" + key, value), _defineProperty(_ref, key, value), _ref;
+}
+
+function projectiveMatrixToCssValue(matrix) {
+  var matrixValues = [];
+
+  for (var i = 0; i < 4; i++) {
+    for (var j = 0; j < 4; j++) {
+      matrixValues.push(matrix[j][i].toFixed(20));
+    }
+  }
+
+  return "matrix3d(".concat(matrixValues.join(','), ")");
+}
+
+function getScale3dCssValue(origin, target) {
+  return "scale3d(".concat(target.width / origin.width, ", ").concat(target.height / origin.height, ", 1)");
+}
+
+function getTranslate3dCssValue(tx, ty) {
+  var tz = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+  return "translate3d(".concat(tx, "px, ").concat(ty, "px, ").concat(tz, "px)");
+}
+
+/***/ }),
+
+/***/ "./src/utility/projections.js":
+/*!************************************!*\
+  !*** ./src/utility/projections.js ***!
+  \************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.findProjectiveMatrix = findProjectiveMatrix;
+
+var _numeric = _interopRequireDefault(__webpack_require__(/*! numeric */ "numeric"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function findProjectiveMatrix(origin, target) {
   var matrix = [];
   var b = [];
 
@@ -381,31 +485,6 @@ function _addCondition(matrix, b, origin, target) {
   matrix.push(secondCondition);
   b.push(target.y);
 }
-
-function _projectiveMatrixToCssValue(matrix) {
-  var matrixValues = [];
-
-  for (var i = 0; i < 4; i++) {
-    for (var j = 0; j < 4; j++) {
-      matrixValues.push(matrix[j][i].toFixed(20));
-    }
-  }
-
-  return "matrix3d(".concat(matrixValues.join(','), ")");
-}
-
-function _getCssWithPrefixes(key, value) {
-  var _ref;
-
-  return _ref = {}, _defineProperty(_ref, "-webkit-" + key, value), _defineProperty(_ref, "-khtml-" + key, value), _defineProperty(_ref, "-moz-" + key, value), _defineProperty(_ref, "-ms-" + key, value), _defineProperty(_ref, "-o-" + key, value), _defineProperty(_ref, key, value), _ref;
-}
-
-function distortableVideoOverlay(url, corners, options) {
-  return new DistortableVideoOverlay(url, corners, options);
-}
-
-_leaflet.default.DistortableVideoOverlay = DistortableVideoOverlay;
-_leaflet.default.distortableVideoOverlay = distortableVideoOverlay;
 
 /***/ }),
 
