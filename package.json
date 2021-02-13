@@ -1,8 +1,9 @@
 {
   "name": "leaflet-distortable-video",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Enable to distort videos on Leaflet maps.",
   "main": "dist/index.js",
+  "types": "src/index.d.ts",
   "scripts": {
     "build": "./node_modules/.bin/webpack --mode production && npm run build:dev",
     "build:dev": "./node_modules/.bin/webpack --mode development",
