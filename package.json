@@ -1,6 +1,6 @@
 {
   "name": "leaflet-distortable-video",
-  "version": "0.2.5",
+  "version": "0.3.0",
   "description": "Enable to distort videos on Leaflet maps.",
   "main": "dist/index.js",
   "scripts": {
