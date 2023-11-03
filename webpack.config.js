@@ -1,18 +1,17 @@
-var webpack = require('webpack');
-var path = require('path');
-var nodeExternals = require('webpack-node-externals');
+const path = require('path');
+const isProduction = process.env.NODE_ENV == 'production';
 
-module.exports = (env, options) => ({
-  entry: path.resolve(__dirname, 'src/distortableVideoOverlay.js'),
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: `${options.mode !== "production" ? "index" : "index.min"}.js`,
-    library: '',
-    libraryTarget: 'umd'
-  },
-  module: {
-    rules: [
-      {
+const config = {
+    entry: './src/distortableVideoOverlay.js',
+    output: {
+        path: path.resolve(__dirname, 'dist'),
+        filename: `${!isProduction ? "index" : "index.min"}.js`,
+        library: 'leaflet-distortable-video',
+        libraryTarget: 'umd'
+    },
+    module: {
+        rules: [
+            {
         test: /\.js$/,
         exclude: /(node_modules|bower_components)/,
         loader: 'babel-loader',
@@ -20,22 +19,31 @@ module.exports = (env, options) => ({
           presets: ['@babel/preset-env']
         }
       }
-    ]
-  },
-  devtool: 'source-map',
-  externals: {
-    jquery: {
-      commonjs: "jquery",
-      commonjs2: "jquery",
-      amd: "jquery",
-      root: "jQuery"
+     ]
     },
-    leaflet: {
-      commonjs: "leaflet",
-      commonjs2: "leaflet",
-      amd: "leaflet",
-      root: "L"
+    devtool: 'source-map',
+    externals: {
+      jquery: {
+        commonjs: "jquery",
+        commonjs2: "jquery",
+        amd: "jquery",
+        root: "jQuery"
+      },
+      leaflet: {
+        commonjs: "leaflet",
+        commonjs2: "leaflet",
+        amd: "leaflet",
+        root: "L"
+      },
+      numeric: "numeric"
     },
-    numeric: "numeric"
-  }
-});
+};
+
+module.exports = () => {
+    if (isProduction) {
+        config.mode = 'production';
+    } else {
+        config.mode = 'development';
+    }
+    return config;
+};
