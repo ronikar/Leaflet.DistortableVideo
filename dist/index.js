@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("leaflet"), require("jquery"), require("numeric"));
+		module.exports = factory(require("leaflet"), require("jquery"));
 	else if(typeof define === 'function' && define.amd)
-		define(["leaflet", "jquery", "numeric"], factory);
+		define(["leaflet", "jquery"], factory);
 	else if(typeof exports === 'object')
-		exports["leaflet-distortable-video"] = factory(require("leaflet"), require("jquery"), require("numeric"));
+		exports["leaflet-distortable-video"] = factory(require("leaflet"), require("jquery"));
 	else
-		root["leaflet-distortable-video"] = factory(root["L"], root["jQuery"], root["numeric"]);
-})(typeof self !== 'undefined' ? self : this, (__WEBPACK_EXTERNAL_MODULE_leaflet__, __WEBPACK_EXTERNAL_MODULE_jquery__, __WEBPACK_EXTERNAL_MODULE_numeric__) => {
+		root["leaflet-distortable-video"] = factory(root["L"], root["jQuery"]);
+})(typeof self !== 'undefined' ? self : this, (__WEBPACK_EXTERNAL_MODULE_leaflet__, __WEBPACK_EXTERNAL_MODULE_jquery__) => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
@@ -149,39 +149,62 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   findProjectiveMatrix: () => (/* binding */ findProjectiveMatrix)
 /* harmony export */ });
-/* harmony import */ var numeric__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! numeric */ "numeric");
-/* harmony import */ var numeric__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(numeric__WEBPACK_IMPORTED_MODULE_0__);
-
+// Solves for the projective transform that maps `origin` onto `target`, returned
+// as the 4x4 matrix projectiveMatrixToCssValue() serialises into matrix3d().
+//
+// PRECONDITION: `origin` is the axis-aligned rectangle (0,0)-(w,0)-(w,h)-(0,h).
+// Both call sites satisfy this, because they build `origin` with
+// getElementCorners(), which anchors the rectangle at {x: 0, y: 0}.
+//
+// That precondition is what makes the closed form below possible. A general
+// rectangle-to-quadrilateral homography is the classic unit-square-to-quad
+// mapping pre-scaled by 1/w and 1/h, so there is no linear system to solve:
+// one 2x2 determinant replaces the 8x8 Gaussian elimination this used to hand
+// to numeric.solve(). Same result to ~1e-10 px, and no dependency.
 function findProjectiveMatrix(origin, target) {
-  var matrix = [];
-  var b = [];
-  _addCondition(matrix, b, origin.topLeft, target.topLeft);
-  _addCondition(matrix, b, origin.topRight, target.topRight);
-  _addCondition(matrix, b, origin.bottomLeft, target.bottomLeft);
-  _addCondition(matrix, b, origin.bottomRight, target.bottomRight);
-  var x = numeric__WEBPACK_IMPORTED_MODULE_0___default().solve(matrix, b);
-  return [[x[0], x[1], 0, x[2]], [x[3], x[4], 0, x[5]], [0, 0, 1, 0], [x[6], x[7], 0, 1]];
+  var width = origin.bottomRight.x - origin.topLeft.x;
+  var height = origin.bottomRight.y - origin.topLeft.y;
+  var _target$topLeft = target.topLeft,
+    x0 = _target$topLeft.x,
+    y0 = _target$topLeft.y;
+  var _target$topRight = target.topRight,
+    x1 = _target$topRight.x,
+    y1 = _target$topRight.y;
+  var _target$bottomRight = target.bottomRight,
+    x2 = _target$bottomRight.x,
+    y2 = _target$bottomRight.y;
+  var _target$bottomLeft = target.bottomLeft,
+    x3 = _target$bottomLeft.x,
+    y3 = _target$bottomLeft.y;
+
+  // Both are zero exactly when the target is a parallelogram, i.e. when the
+  // mapping is affine and needs no perspective term. A rotated map produces
+  // this case, so it is the common path, not an edge case.
+  var sumX = x0 - x1 + x2 - x3;
+  var sumY = y0 - y1 + y2 - y3;
+  var a11, a21, a12, a22, a13, a23;
+  if (sumX === 0 && sumY === 0) {
+    a11 = x1 - x0;
+    a21 = x3 - x0;
+    a13 = 0;
+    a12 = y1 - y0;
+    a22 = y3 - y0;
+    a23 = 0;
+  } else {
+    var dx1 = x1 - x2,
+      dy1 = y1 - y2;
+    var dx2 = x3 - x2,
+      dy2 = y3 - y2;
+    var denominator = dx1 * dy2 - dx2 * dy1;
+    a13 = (sumX * dy2 - dx2 * sumY) / denominator;
+    a23 = (dx1 * sumY - sumX * dy1) / denominator;
+    a11 = x1 - x0 + a13 * x1;
+    a21 = x3 - x0 + a23 * x3;
+    a12 = y1 - y0 + a13 * y1;
+    a22 = y3 - y0 + a23 * y3;
+  }
+  return [[a11 / width, a21 / height, 0, x0], [a12 / width, a22 / height, 0, y0], [0, 0, 1, 0], [a13 / width, a23 / height, 0, 1]];
 }
-function _addCondition(matrix, b, origin, target) {
-  var x = origin.x,
-    y = origin.y;
-  var firstCondition = [x, y, 1, 0, 0, 0, -target.x * x, -target.x * y];
-  var secondCondition = [0, 0, 0, x, y, 1, -target.y * x, -target.y * y];
-  matrix.push(firstCondition);
-  b.push(target.x);
-  matrix.push(secondCondition);
-  b.push(target.y);
-}
-
-/***/ }),
-
-/***/ "numeric":
-/*!**************************!*\
-  !*** external "numeric" ***!
-  \**************************/
-/***/ ((module) => {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_numeric__;
 
 /***/ }),
 

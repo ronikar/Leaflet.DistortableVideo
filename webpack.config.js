@@ -39,8 +39,7 @@ const config = {
         commonjs2: "leaflet",
         amd: "leaflet",
         root: "L"
-      },
-      numeric: "numeric"
+      }
     },
 };
 

@@ -27,8 +27,7 @@
   "homepage": "https://github.com/ronikar/Leaflet.DistortableVideo#readme",
   "dependencies": {
     "@types/leaflet": "^1.5.21",
-    "jquery": "^4.0.0",
-    "numeric": "^1.2.6"
+    "jquery": "^4.0.0"
   },
   "peerDependencies": {
     "leaflet": "^1.x"
