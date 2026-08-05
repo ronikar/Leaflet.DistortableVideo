@@ -28,12 +28,6 @@ const config = {
     },
     devtool: 'source-map',
     externals: {
-      jquery: {
-        commonjs: "jquery",
-        commonjs2: "jquery",
-        amd: "jquery",
-        root: "jQuery"
-      },
       leaflet: {
         commonjs: "leaflet",
         commonjs2: "leaflet",

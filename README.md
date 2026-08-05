@@ -7,7 +7,6 @@ https://ronikar.github.io/Leaflet.DistortableVideo/examples/
 ## Requirements
 ### Dependancies
 * Leaflet 1.^
-* JQuery 
 
 ### Browser Compatibility
 Your browser must support the next features

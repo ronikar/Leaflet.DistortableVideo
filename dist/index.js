@@ -1,13 +1,13 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("leaflet"), require("jquery"));
+		module.exports = factory(require("leaflet"));
 	else if(typeof define === 'function' && define.amd)
-		define(["leaflet", "jquery"], factory);
+		define(["leaflet"], factory);
 	else if(typeof exports === 'object')
-		exports["leaflet-distortable-video"] = factory(require("leaflet"), require("jquery"));
+		exports["leaflet-distortable-video"] = factory(require("leaflet"));
 	else
-		root["leaflet-distortable-video"] = factory(root["L"], root["jQuery"]);
-})(typeof self !== 'undefined' ? self : this, (__WEBPACK_EXTERNAL_MODULE_leaflet__, __WEBPACK_EXTERNAL_MODULE_jquery__) => {
+		root["leaflet-distortable-video"] = factory(root["L"]);
+})(typeof self !== 'undefined' ? self : this, (__WEBPACK_EXTERNAL_MODULE_leaflet__) => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
@@ -23,7 +23,6 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   areCornersEqual: () => (/* binding */ areCornersEqual),
 /* harmony export */   areSomeCornersEqual: () => (/* binding */ areSomeCornersEqual),
 /* harmony export */   calculateRectangleCorners: () => (/* binding */ calculateRectangleCorners),
-/* harmony export */   getElementCorners: () => (/* binding */ getElementCorners),
 /* harmony export */   getXCoordinates: () => (/* binding */ getXCoordinates),
 /* harmony export */   getYCoordinates: () => (/* binding */ getYCoordinates),
 /* harmony export */   isCorners: () => (/* binding */ isCorners)
@@ -34,13 +33,6 @@ function isCorners(value) {
     bottomLeft = value.bottomLeft,
     bottomRight = value.bottomRight;
   return !!topLeft && !!topRight && !!bottomLeft && !!bottomRight;
-}
-function getElementCorners(element) {
-  var jElement = $(element);
-  return calculateRectangleCorners({
-    x: 0,
-    y: 0
-  }, jElement.height(), jElement.width());
 }
 function calculateRectangleCorners(topLeft, height, width) {
   var left = topLeft.x,
@@ -109,23 +101,32 @@ function getYCoordinates(corners) {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   getCssWithPrefixes: () => (/* binding */ getCssWithPrefixes),
 /* harmony export */   getScale3dCssValue: () => (/* binding */ getScale3dCssValue),
 /* harmony export */   getTranslate3dCssValue: () => (/* binding */ getTranslate3dCssValue),
-/* harmony export */   projectiveMatrixToCssValue: () => (/* binding */ projectiveMatrixToCssValue)
+/* harmony export */   projectiveMatrixToCssValue: () => (/* binding */ projectiveMatrixToCssValue),
+/* harmony export */   setTransform: () => (/* binding */ setTransform),
+/* harmony export */   setTransformOrigin: () => (/* binding */ setTransformOrigin)
 /* harmony export */ });
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
-function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-function _toPropertyKey(arg) { var key = _toPrimitive(arg, "string"); return _typeof(key) === "symbol" ? key : String(key); }
-function _toPrimitive(input, hint) { if (_typeof(input) !== "object" || input === null) return input; var prim = input[Symbol.toPrimitive]; if (prim !== undefined) { var res = prim.call(input, hint || "default"); if (_typeof(res) !== "object") return res; throw new TypeError("@@toPrimitive must return a primitive value."); } return (hint === "string" ? String : Number)(input); }
-function getCssWithPrefixes(key, value) {
-  var _ref;
-  return _ref = {}, _defineProperty(_ref, "-webkit-" + key, value), _defineProperty(_ref, "-khtml-" + key, value), _defineProperty(_ref, "-moz-" + key, value), _defineProperty(_ref, "-ms-" + key, value), _defineProperty(_ref, "-o-" + key, value), _defineProperty(_ref, key, value), _ref;
+// Applies a transform to an element. Only the -webkit- prefix is still worth
+// carrying, for older WebKit; -khtml-, -moz-, -ms- and -o- never shipped a
+// matrix3d implementation that unprefixed CSS does not already cover.
+function setTransform(element, value) {
+  element.style.webkitTransform = value;
+  element.style.transform = value;
+}
+
+// transform-origin is constant for the lifetime of the layer, so it is set once
+// rather than rewritten on every projection.
+function setTransformOrigin(element, value) {
+  element.style.webkitTransformOrigin = value;
+  element.style.transformOrigin = value;
 }
 function projectiveMatrixToCssValue(matrix) {
   var matrixValues = [];
+
+  // matrix3d() takes its arguments in column-major order.
   for (var i = 0; i < 4; i++) {
-    for (var j = 0; j < 4; j++) matrixValues.push(matrix[j][i].toFixed(20));
+    for (var j = 0; j < 4; j++) matrixValues.push(matrix[j][i]);
   }
   return "matrix3d(".concat(matrixValues.join(','), ")");
 }
@@ -205,16 +206,6 @@ function findProjectiveMatrix(origin, target) {
   }
   return [[a11 / width, a21 / height, 0, x0], [a12 / width, a22 / height, 0, y0], [0, 0, 1, 0], [a13 / width, a23 / height, 0, 1]];
 }
-
-/***/ }),
-
-/***/ "jquery":
-/*!******************************************************************************************!*\
-  !*** external {"commonjs":"jquery","commonjs2":"jquery","amd":"jquery","root":"jQuery"} ***!
-  \******************************************************************************************/
-/***/ ((module) => {
-
-module.exports = __WEBPACK_EXTERNAL_MODULE_jquery__;
 
 /***/ }),
 
@@ -308,11 +299,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var leaflet__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! leaflet */ "leaflet");
 /* harmony import */ var leaflet__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(leaflet__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! jquery */ "jquery");
-/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(jquery__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _utility_projections__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utility/projections */ "./src/utility/projections.js");
-/* harmony import */ var _utility_corners__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utility/corners */ "./src/utility/corners.js");
-/* harmony import */ var _utility_css__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./utility/css */ "./src/utility/css.js");
+/* harmony import */ var _utility_projections__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utility/projections */ "./src/utility/projections.js");
+/* harmony import */ var _utility_corners__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utility/corners */ "./src/utility/corners.js");
+/* harmony import */ var _utility_css__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utility/css */ "./src/utility/css.js");
 function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
@@ -323,7 +312,6 @@ function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o =
 function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
 function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
-
 
 
 
@@ -346,17 +334,37 @@ var DistortableVideoOverlay = leaflet__WEBPACK_IMPORTED_MODULE_0___default().Vid
   },
   _initImage: function _initImage() {
     leaflet__WEBPACK_IMPORTED_MODULE_0___default().VideoOverlay.prototype._initImage.call(this);
-    this._image.style['objectFit'] = 'fill';
+    this._image.style.objectFit = 'fill';
+
+    // Constant for the lifetime of the layer, so it is set once here rather
+    // than rewritten on every projection.
+    (0,_utility_css__WEBPACK_IMPORTED_MODULE_3__.setTransformOrigin)(this._image, '0 0 0');
+  },
+  // The video is always sized to the map viewport, so the projection's source
+  // rectangle is the viewport rectangle anchored at (0,0). map.getSize() is
+  // cached by Leaflet, so reading it does not force a layout the way measuring
+  // the container did.
+  _originRect: function _originRect() {
+    var size = this._map.getSize();
+
+    // A hidden or zero-sized container gives a degenerate source rectangle,
+    // which makes the projective system singular and every matrix entry NaN.
+    // Keep the last good transform instead of writing a value the browser
+    // discards and nothing ever recomputes.
+    if (!size.x || !size.y) return null;
+    return (0,_utility_corners__WEBPACK_IMPORTED_MODULE_2__.calculateRectangleCorners)({
+      x: 0,
+      y: 0
+    }, size.y, size.x);
   },
   _reset: function _reset() {
     var _this = this;
-    var image = this._image;
-    var map = this._map.getContainer();
-    jquery__WEBPACK_IMPORTED_MODULE_1___default()(image).css((0,_utility_css__WEBPACK_IMPORTED_MODULE_4__.getCssWithPrefixes)("transition", "width 0.05s"));
-    image.style.width = jquery__WEBPACK_IMPORTED_MODULE_1___default()(map).width() + 'px';
-    image.style.height = jquery__WEBPACK_IMPORTED_MODULE_1___default()(map).height() + 'px';
-    var originAfterReset = (0,_utility_corners__WEBPACK_IMPORTED_MODULE_3__.getElementCorners)(map);
-    var pixelicPositionProvider = function pixelicPositionProvider(point) {
+    var origin = this._originRect();
+    if (!origin) return;
+    var size = this._map.getSize();
+    this._image.style.width = size.x + 'px';
+    this._image.style.height = size.y + 'px';
+    this._projectVideoOnMap(origin, function (point) {
       var _this$_map$latLngToLa = _this._map.latLngToLayerPoint(point),
         x = _this$_map$latLngToLa.x,
         y = _this$_map$latLngToLa.y;
@@ -364,15 +372,15 @@ var DistortableVideoOverlay = leaflet__WEBPACK_IMPORTED_MODULE_0___default().Vid
         x: Math.round(x),
         y: Math.round(y)
       };
-    };
-    this._projectVideoOnMap(originAfterReset, pixelicPositionProvider);
+    });
   },
   _animateZoom: function _animateZoom(e) {
     var _this2 = this;
     var zoom = e.zoom,
       center = e.center;
-    var videoPosition = (0,_utility_corners__WEBPACK_IMPORTED_MODULE_3__.getElementCorners)(this.image);
-    var pixelicPositionProvider = function pixelicPositionProvider(point) {
+    var origin = this._originRect();
+    if (!origin) return;
+    this._projectVideoOnMap(origin, function (point) {
       var _this2$_map$_latLngTo = _this2._map._latLngToNewLayerPoint(point, zoom, center),
         x = _this2$_map$_latLngTo.x,
         y = _this2$_map$_latLngTo.y;
@@ -380,41 +388,38 @@ var DistortableVideoOverlay = leaflet__WEBPACK_IMPORTED_MODULE_0___default().Vid
         x: Math.round(x),
         y: Math.round(y)
       };
-    };
-    this._projectVideoOnMap(videoPosition, pixelicPositionProvider);
+    });
   },
   _projectVideoOnMap: function _projectVideoOnMap(origin, pixelicPositionProvider) {
-    var corners = this._bounds;
-    var videoElement = jquery__WEBPACK_IMPORTED_MODULE_1___default()(this._image);
-    var target = _getTargetCorners(corners, pixelicPositionProvider);
-    var cssTransformValue = (0,_utility_corners__WEBPACK_IMPORTED_MODULE_3__.areSomeCornersEqual)(target) ? this._projectAsRectangle(target) : this._projectWithProjectiveMatrix(origin, target);
-    videoElement.css((0,_utility_css__WEBPACK_IMPORTED_MODULE_4__.getCssWithPrefixes)("transform", cssTransformValue));
-    videoElement.css((0,_utility_css__WEBPACK_IMPORTED_MODULE_4__.getCssWithPrefixes)("transform-origin", '0 0 0px'));
+    var target = _getTargetCorners(this._bounds, pixelicPositionProvider);
+    var cssTransformValue = (0,_utility_corners__WEBPACK_IMPORTED_MODULE_2__.areSomeCornersEqual)(target) ? this._projectAsRectangle(origin, target) : this._projectWithProjectiveMatrix(origin, target);
+    (0,_utility_css__WEBPACK_IMPORTED_MODULE_3__.setTransform)(this._image, cssTransformValue);
   },
   _projectWithProjectiveMatrix: function _projectWithProjectiveMatrix(origin, target) {
-    var matrix3d = (0,_utility_projections__WEBPACK_IMPORTED_MODULE_2__.findProjectiveMatrix)(origin, target);
-    return (0,_utility_css__WEBPACK_IMPORTED_MODULE_4__.projectiveMatrixToCssValue)(matrix3d);
+    var matrix3d = (0,_utility_projections__WEBPACK_IMPORTED_MODULE_1__.findProjectiveMatrix)(origin, target);
+    return (0,_utility_css__WEBPACK_IMPORTED_MODULE_3__.projectiveMatrixToCssValue)(matrix3d);
   },
-  _projectAsRectangle: function _projectAsRectangle(target) {
-    var videoElement = jquery__WEBPACK_IMPORTED_MODULE_1___default()(this._image);
-    var xCoordinates = (0,_utility_corners__WEBPACK_IMPORTED_MODULE_3__.getXCoordinates)(target);
-    var yCoordinates = (0,_utility_corners__WEBPACK_IMPORTED_MODULE_3__.getYCoordinates)(target);
+  // Two or more target corners coincide, so the quad has collapsed and the
+  // projective system would be singular. Fall back to a plain scale/translate.
+  _projectAsRectangle: function _projectAsRectangle(origin, target) {
+    var xCoordinates = (0,_utility_corners__WEBPACK_IMPORTED_MODULE_2__.getXCoordinates)(target);
+    var yCoordinates = (0,_utility_corners__WEBPACK_IMPORTED_MODULE_2__.getYCoordinates)(target);
     var minX = Math.min.apply(Math, _toConsumableArray(xCoordinates));
     var maxX = Math.max.apply(Math, _toConsumableArray(xCoordinates));
     var minY = Math.min.apply(Math, _toConsumableArray(yCoordinates));
     var maxY = Math.max.apply(Math, _toConsumableArray(yCoordinates));
     var size = {
-      height: videoElement.height(),
-      width: videoElement.width()
+      width: origin.bottomRight.x,
+      height: origin.bottomRight.y
     };
     var afterScalingSize = {
-      height: maxY - minY,
-      width: maxX - minX
+      width: maxX - minX,
+      height: maxY - minY
     };
-    return "".concat((0,_utility_css__WEBPACK_IMPORTED_MODULE_4__.getTranslate3dCssValue)(minX, minY), " ").concat((0,_utility_css__WEBPACK_IMPORTED_MODULE_4__.getScale3dCssValue)(size, afterScalingSize));
+    return "".concat((0,_utility_css__WEBPACK_IMPORTED_MODULE_3__.getTranslate3dCssValue)(minX, minY), " ").concat((0,_utility_css__WEBPACK_IMPORTED_MODULE_3__.getScale3dCssValue)(size, afterScalingSize));
   },
   _getCorners: function _getCorners(value) {
-    if ((0,_utility_corners__WEBPACK_IMPORTED_MODULE_3__.isCorners)(value)) return value;
+    if ((0,_utility_corners__WEBPACK_IMPORTED_MODULE_2__.isCorners)(value)) return value;
     if (this._isPointArray(value)) return this._pointArrayToCorners(value);
     return this._boundsToCorners(value);
   },
@@ -462,7 +467,6 @@ function _getTargetCorners(geographicCorners, pixelicPositionProvider) {
     bottomRight: pixelicPositionProvider(bottomRight)
   };
 }
-;
 function distortableVideoOverlay(url, corners, options) {
   return new DistortableVideoOverlay(url, corners, options);
 }
