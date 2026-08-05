@@ -7,7 +7,12 @@ const config = {
         path: path.resolve(__dirname, 'dist'),
         filename: `${!isProduction ? "index" : "index.min"}.js`,
         library: 'leaflet-distortable-video',
-        libraryTarget: 'umd'
+        libraryTarget: 'umd',
+        // Without this, webpack 5 defaults to `self` for a UMD bundle. `self` is
+        // evaluated eagerly as the wrapper's argument, so it throws in Node
+        // before the CommonJS branch is ever reached, which breaks require() and
+        // any server-side render.
+        globalObject: "typeof self !== 'undefined' ? self : this"
     },
     module: {
         rules: [

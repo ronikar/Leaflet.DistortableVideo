@@ -7,7 +7,7 @@
 		exports["leaflet-distortable-video"] = factory(require("leaflet"), require("jquery"), require("numeric"));
 	else
 		root["leaflet-distortable-video"] = factory(root["L"], root["jQuery"], root["numeric"]);
-})(self, (__WEBPACK_EXTERNAL_MODULE_leaflet__, __WEBPACK_EXTERNAL_MODULE_jquery__, __WEBPACK_EXTERNAL_MODULE_numeric__) => {
+})(typeof self !== 'undefined' ? self : this, (__WEBPACK_EXTERNAL_MODULE_leaflet__, __WEBPACK_EXTERNAL_MODULE_jquery__, __WEBPACK_EXTERNAL_MODULE_numeric__) => {
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
