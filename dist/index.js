@@ -2,7 +2,7 @@
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('leaflet'), require('jquery')) :
     typeof define === 'function' && define.amd ? define(['exports', 'leaflet', 'jquery'], factory) :
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global["leaflet-distortable-video"] = {}, global.L, global.jQuery));
-})(this, (function (exports, L, $$1) { 'use strict';
+})(this, (function (exports, L, $) { 'use strict';
 
     // Solves for the projective transform that maps `origin` onto `target`, returned
     // as the 4x4 matrix projectiveMatrixToCssValue() serialises into matrix3d().
@@ -171,9 +171,9 @@
             const image = this._image;
             const map = this._map.getContainer();
 
-            $$1(image).css(getCssWithPrefixes("transition", "width 0.05s"));
-            image.style.width = $$1(map).width() + 'px';
-            image.style.height = $$1(map).height() + 'px';
+            $(image).css(getCssWithPrefixes("transition", "width 0.05s"));
+            image.style.width = $(map).width() + 'px';
+            image.style.height = $(map).height() + 'px';
 
             const originAfterReset = getElementCorners(map);
             const pixelicPositionProvider = (point) => {
@@ -197,7 +197,7 @@
 
         _projectVideoOnMap: function (origin, pixelicPositionProvider) {
             const corners = this._bounds;
-            const videoElement = $$1(this._image);
+            const videoElement = $(this._image);
             const target = _getTargetCorners(corners, pixelicPositionProvider);
 
             const cssTransformValue = areSomeCornersEqual(target) ? this._projectAsRectangle(target) :
@@ -213,7 +213,7 @@
         },
 
         _projectAsRectangle: function (target) {
-            const videoElement = $$1(this._image);
+            const videoElement = $(this._image);
             const xCoordinates = getXCoordinates(target);
             const yCoordinates = getYCoordinates(target);
 

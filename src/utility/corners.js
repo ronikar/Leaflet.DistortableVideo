@@ -1,3 +1,5 @@
+import $ from "jquery";
+
 export function isCorners(value) {
     const { topLeft, topRight, bottomLeft, bottomRight } = value;
 
