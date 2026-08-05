@@ -7,7 +7,6 @@ https://ronikar.github.io/Leaflet.DistortableVideo/examples/
 ## Requirements
 ### Dependancies
 * Leaflet 1.^
-* Numeric.js 1.2.6 
 * JQuery 
 
 ### Browser Compatibility
@@ -75,6 +74,26 @@ var corners= {
 };
 
 overlay.setCorners(corners);
+```
+
+### Rotated maps
+
+The overlay works on a rotated map without any extra configuration. The corners are
+projected with `latLngToLayerPoint`, which is unaffected by the map bearing, and the
+video sits inside the rotate pane, so the pane's rotation composes with the
+`matrix3d` the plugin computes.
+
+See `examples/rotate.html`, which uses
+[leaflet-rotate-map](https://www.npmjs.com/package/leaflet-rotate-map) — a drop-in
+replacement for `leaflet` that adds rotation — and lets you drag the bearing from
+0° to 360°:
+
+```js
+var map = L.map('map', { rotate: true });
+
+L.distortableVideoOverlay(videoUrl, corners, { opacity: 0.8 }).addTo(map);
+
+map.setBearing(45);
 ```
 
 ### Module Loaders
