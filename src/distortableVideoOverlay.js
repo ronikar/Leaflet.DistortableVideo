@@ -1,9 +1,8 @@
 import L from "leaflet";
-import $ from "jquery";
 
 import { findProjectiveMatrix } from "./utility/projections";
-import { isCorners, getElementCorners, getXCoordinates, getYCoordinates, areSomeCornersEqual } from "./utility/corners";
-import { getCssWithPrefixes, projectiveMatrixToCssValue, getScale3dCssValue, getTranslate3dCssValue } from "./utility/css";
+import { isCorners, calculateRectangleCorners, getXCoordinates, getYCoordinates, areSomeCornersEqual } from "./utility/corners";
+import { setTransform, setTransformOrigin, projectiveMatrixToCssValue, getScale3dCssValue, getTranslate3dCssValue } from "./utility/css";
 
 const DistortableVideoOverlay = L.VideoOverlay.extend({
     initialize: function (element, bounds, options) {
@@ -27,47 +26,63 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
 
     _initImage: function () {
         L.VideoOverlay.prototype._initImage.call(this);
-        this._image.style['objectFit'] = 'fill';
+
+        this._image.style.objectFit = 'fill';
+
+        // Constant for the lifetime of the layer, so it is set once here rather
+        // than rewritten on every projection.
+        setTransformOrigin(this._image, '0 0 0');
+    },
+
+    // The video is always sized to the map viewport, so the projection's source
+    // rectangle is the viewport rectangle anchored at (0,0). map.getSize() is
+    // cached by Leaflet, so reading it does not force a layout the way measuring
+    // the container did.
+    _originRect: function () {
+        const size = this._map.getSize();
+
+        // A hidden or zero-sized container gives a degenerate source rectangle,
+        // which makes the projective system singular and every matrix entry NaN.
+        // Keep the last good transform instead of writing a value the browser
+        // discards and nothing ever recomputes.
+        if (!size.x || !size.y) return null;
+
+        return calculateRectangleCorners({ x: 0, y: 0 }, size.y, size.x);
     },
 
     _reset: function () {
-        const image = this._image;
-        const map = this._map.getContainer();
+        const origin = this._originRect();
+        if (!origin) return;
 
-        $(image).css(getCssWithPrefixes("transition", "width 0.05s"));
-        image.style.width = $(map).width() + 'px';
-        image.style.height = $(map).height() + 'px';
+        const size = this._map.getSize();
+        this._image.style.width = size.x + 'px';
+        this._image.style.height = size.y + 'px';
 
-        const originAfterReset = getElementCorners(map);
-        const pixelicPositionProvider = (point) => {
+        this._projectVideoOnMap(origin, (point) => {
             const { x, y } = this._map.latLngToLayerPoint(point);
-            return { x: Math.round(x), y: Math.round(y) }
-        };
-
-        this._projectVideoOnMap(originAfterReset, pixelicPositionProvider);
+            return { x: Math.round(x), y: Math.round(y) };
+        });
     },
 
     _animateZoom: function (e) {
         const { zoom, center } = e;
-        const videoPosition = getElementCorners(this.image);
-        const pixelicPositionProvider = (point) => {
-            const { x, y } = this._map._latLngToNewLayerPoint(point, zoom, center);
-            return { x: Math.round(x), y: Math.round(y) }
-        };
+        const origin = this._originRect();
+        if (!origin) return;
 
-        this._projectVideoOnMap(videoPosition, pixelicPositionProvider);
+        this._projectVideoOnMap(origin, (point) => {
+            const { x, y } = this._map._latLngToNewLayerPoint(point, zoom, center);
+            return { x: Math.round(x), y: Math.round(y) };
+        });
     },
 
     _projectVideoOnMap: function (origin, pixelicPositionProvider) {
-        const corners = this._bounds;
-        const videoElement = $(this._image);
-        const target = _getTargetCorners(corners, pixelicPositionProvider);
+        const target = _getTargetCorners(this._bounds, pixelicPositionProvider);
 
-        const cssTransformValue = areSomeCornersEqual(target) ? this._projectAsRectangle(target) :
-            this._projectWithProjectiveMatrix(origin, target);
+        const cssTransformValue = areSomeCornersEqual(target)
+            ? this._projectAsRectangle(origin, target)
+            : this._projectWithProjectiveMatrix(origin, target);
 
-        videoElement.css(getCssWithPrefixes("transform", cssTransformValue));
-        videoElement.css(getCssWithPrefixes("transform-origin", '0 0 0px'));
+        setTransform(this._image, cssTransformValue);
     },
 
     _projectWithProjectiveMatrix: function (origin, target) {
@@ -75,8 +90,9 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
         return projectiveMatrixToCssValue(matrix3d);
     },
 
-    _projectAsRectangle: function (target) {
-        const videoElement = $(this._image);
+    // Two or more target corners coincide, so the quad has collapsed and the
+    // projective system would be singular. Fall back to a plain scale/translate.
+    _projectAsRectangle: function (origin, target) {
         const xCoordinates = getXCoordinates(target);
         const yCoordinates = getYCoordinates(target);
 
@@ -85,8 +101,8 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
         const minY = Math.min(...yCoordinates);
         const maxY = Math.max(...yCoordinates);
 
-        const size = { height: videoElement.height(), width: videoElement.width() };
-        const afterScalingSize = { height: maxY - minY, width: maxX - minX };
+        const size = { width: origin.bottomRight.x, height: origin.bottomRight.y };
+        const afterScalingSize = { width: maxX - minX, height: maxY - minY };
 
         return `${getTranslate3dCssValue(minX, minY)} ${getScale3dCssValue(size, afterScalingSize)}`;
     },
@@ -129,8 +145,8 @@ function _getTargetCorners(geographicCorners, pixelicPositionProvider) {
         topRight: pixelicPositionProvider(topRight),
         bottomLeft: pixelicPositionProvider(bottomLeft),
         bottomRight: pixelicPositionProvider(bottomRight)
-    }
-};
+    };
+}
 
 export default function distortableVideoOverlay(url, corners, options) {
     return new DistortableVideoOverlay(url, corners, options);

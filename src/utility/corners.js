@@ -4,11 +4,6 @@ export function isCorners(value) {
     return !!topLeft && !!topRight && !!bottomLeft && !!bottomRight;
 }
 
-export function getElementCorners(element) {
-    const jElement = $(element);
-    return calculateRectangleCorners({ x: 0, y: 0 }, jElement.height(), jElement.width());
-}
-
 export function calculateRectangleCorners(topLeft, height, width) {
     const { x: left, y: top } = topLeft;
     const right = left + width;
