@@ -96,7 +96,9 @@ map.setBearing(45);
 ```
 
 ### Module Loaders
-The index file is built by using `webpack`, in order to enable to use module loaders such as AMD and CommonJS. 
+The index file is built by using `rollup` into a UMD bundle, so it can be loaded with a plain
+`<script>` tag or through a module loader such as AMD or CommonJS. Run `npm run build` to rebuild
+`dist/`, or `npm run watch` while developing. 
 
 
 ## License
