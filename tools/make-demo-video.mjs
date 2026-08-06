@@ -21,7 +21,7 @@
 // Requires ffmpeg on PATH. Node 18+ (uses global fetch).
 //
 //   node tools/make-demo-video.mjs --bounds 13,-130,32,-100 --rotate 30 \
-//        --dates 2024-10-08..2024-10-15 --out examples/media/rotated.mp4
+//        --dates 2024-10-08..2024-10-15 --out examples/media/pacific-rotated.mp4
 //
 // See `node tools/make-demo-video.mjs --help`.
 
@@ -48,7 +48,7 @@ const DEFAULTS = {
     width: 1024,
     fps: 4,
     crf: 30,
-    out: 'examples/media/rotated.mp4'
+    out: 'examples/media/pacific-rotated.mp4'
 };
 
 const HELP = `

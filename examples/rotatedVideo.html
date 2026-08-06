@@ -26,7 +26,7 @@
             attribution: 'Map data &copy; <a href="https://developers.arcgis.com">ArcGis</a>'
         }).addTo(map);
 
-        // media/rotated.mp4 is NASA GIBS imagery turned 30 degrees off north-up by
+        // media/pacific-rotated.mp4 is NASA GIBS imagery turned 30 degrees off north-up by
         // tools/make-demo-video.mjs. These corners came from that same run, so the
         // overlay has to rotate the footage back to make the coastlines line up
         // with the basemap - a real projective placement, not a scale.
@@ -39,7 +39,7 @@
 
         map.fitBounds([[6.9, -133.2], [37.1, -96.8]]);
 
-        L.distortableVideoOverlay("media/rotated.mp4", corners, {
+        L.distortableVideoOverlay("media/pacific-rotated.mp4", corners, {
             muted: true,
             autoplay: true,
             loop: true,

@@ -244,7 +244,7 @@
                         </svg>
                         <div>
                             <h3>Corners object</h3>
-                            <p>Four named corners. The general case &mdash; an irregular quad with perspective.</p>
+                            <p>Four named corners, deliberately not the footage’s true footprint &mdash; an irregular quad with perspective.</p>
                         </div>
                     </a>
                 </li>
@@ -258,7 +258,7 @@
                         </svg>
                         <div>
                             <h3>LatLngBounds</h3>
-                            <p>Two opposite corners. Axis-aligned, so it takes the plain scale-and-translate path.</p>
+                            <p>Two opposite corners, the footage’s exact footprint. Axis-aligned, so it takes the scale-and-translate path.</p>
                         </div>
                     </a>
                 </li>
@@ -349,8 +349,14 @@
         <footer>
             <p>Leaflet 2 is still an alpha release. The plugin works with it today, but it overrides several of
                 Leaflet's internal overlay methods, so treat 2.x support as provisional until Leaflet 2 stabilises.</p>
-            <p>The demo footage is NOAA GOES 15 imagery of Hurricane Patricia, 21 October 2015, via the NASA GSFC
-                GOES Project.</p>
+            <p>The footage is NASA <a href="https://nasa-gibs.github.io/gibs-api-docs/">GIBS</a> VIIRS/SNPP
+                true-colour imagery of the eastern Pacific, 8&ndash;15 October 2024 &mdash; public domain, and
+                self-hosted rather than hotlinked. Both clips are regenerable with
+                <code>npm run demo:video</code>; the settings that produced them are recorded alongside each file.</p>
+            <p><b>LatLngBounds</b> and <b>Rotated video</b> place their footage on the exact ground it covers, so the
+                coastlines continue into the basemap. <b>Corners object</b> and <b>Point array</b> deliberately place
+                the same footage on a quad that is <i>not</i> its true footprint &mdash; the visible shear is the
+                point of those two.</p>
         </footer>
 
     </div>

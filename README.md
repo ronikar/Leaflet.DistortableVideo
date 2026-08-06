@@ -47,7 +47,7 @@ var corners= {
             bottomLeft: L.latLng([13,-130])
 };
 
-let layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patricia_nasa.mp4", corners, {
+let layer = L.distortableVideoOverlay("examples/media/pacific.mp4", corners, {
   opacity: 0.8
 }).addTo(map);
 ```
@@ -64,7 +64,7 @@ var bottomRight = L.latLng([13, -97]);
 var bottomLeft = L.latLng([13, -130]);
 var corners = [topLeft, topRight, bottomRight, bottomLeft];
 
-let layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patricia_nasa.mp4", corners, {
+let layer = L.distortableVideoOverlay("examples/media/pacific.mp4", corners, {
   opacity: 0.8
 }).addTo(map);
 ```
@@ -138,14 +138,14 @@ behave identically on both majors.
 
 ### Generating a demo video
 
-`examples/media/rotated.mp4` is built from [NASA GIBS](https://nasa-gibs.github.io/gibs-api-docs/)
+`examples/media/pacific.mp4` and `pacific-rotated.mp4` are built from [NASA GIBS](https://nasa-gibs.github.io/gibs-api-docs/)
 satellite imagery (public domain) by `tools/make-demo-video.mjs`, which also prints the four
 corners to display it at.
 
 ```sh
 npm run demo:video -- --bounds 13,-130,32,-100 --rotate 30 \
   --layer VIIRS_SNPP_CorrectedReflectance_TrueColor \
-  --dates 2024-10-08..2024-10-15 --out examples/media/rotated.mp4
+  --dates 2024-10-08..2024-10-15 --out examples/media/pacific-rotated.mp4
 ```
 
 The point of generating rather than hotlinking is that the footprint is known exactly, so the
