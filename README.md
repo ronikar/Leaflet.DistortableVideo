@@ -11,6 +11,7 @@ Enable to distort videos on Leaflet maps. Leaflet.DistortableVideo allows for pe
 | [`pointArray.html`](examples/pointArray.html) | 1.9.4 | The same corners as a clockwise array |
 | [`rotate.html`](examples/rotate.html) | 1.9.4 | Rotated map via `leaflet-rotate-map` |
 | [`leaflet2.html`](examples/leaflet2.html) | 2.0.0-alpha.1 | All three input shapes on Leaflet 2 |
+| [`rotatedVideo.html`](examples/rotatedVideo.html) | 1.9.4 | Footage stored off north-up, placed back onto the ground |
 
 ## Requirements
 ### Dependancies
@@ -134,6 +135,25 @@ behave identically on both majors.
 > `_animateZoom`). Those carry no compatibility guarantee across a major that has not
 > stabilised yet. TypeScript users should also note that `@types/leaflet` has no 2.x release,
 > and Leaflet 2 ships no type declarations of its own.
+
+### Generating a demo video
+
+`examples/media/rotated.mp4` is built from [NASA GIBS](https://nasa-gibs.github.io/gibs-api-docs/)
+satellite imagery (public domain) by `tools/make-demo-video.mjs`, which also prints the four
+corners to display it at.
+
+```sh
+npm run demo:video -- --bounds 13,-130,32,-100 --rotate 30 \
+  --layer VIIRS_SNPP_CorrectedReflectance_TrueColor \
+  --dates 2024-10-08..2024-10-15 --out examples/media/rotated.mp4
+```
+
+The point of generating rather than hotlinking is that the footprint is known exactly, so the
+coastlines in the video line up with the coastlines on the basemap instead of approximately
+matching. `--rotate` turns the imagery off north-up, which is what makes the overlay do a real
+projective placement rather than a scale-and-translate.
+
+Requires `ffmpeg` on `PATH`. Run `npm run demo:video -- --help` for all options.
 
 ### Module Loaders
 The index file is built by using `rollup` into a UMD bundle, so it can be loaded with a plain
