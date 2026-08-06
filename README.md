@@ -10,7 +10,7 @@ Enable to distort videos on Leaflet maps. Leaflet.DistortableVideo allows for pe
 | [`bounds.html`](examples/bounds.html) | 1.9.4 | North-up footage, `LatLngBounds` input, axis-aligned |
 | [`pointArray.html`](examples/pointArray.html) | 1.9.4 | The same rotated footage, corners as a clockwise array |
 | [`rotate.html`](examples/rotate.html) | 1.9.4 | Rotated footage on a rotated map via `leaflet-rotate-map` |
-| [`leaflet2.html`](examples/leaflet2.html) | 2.0.0-alpha.1 | All three input shapes on Leaflet 2 |
+| [`leaflet2.html`](examples/leaflet2.html) | 2.0.0-alpha.1 | Side by side against stock `L.VideoOverlay` |
 
 ## Requirements
 ### Dependancies

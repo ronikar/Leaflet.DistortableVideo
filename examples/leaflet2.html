@@ -117,10 +117,9 @@
         <div class="map" id="withPlugin"></div>
 
         <section id="shapes">
-            <h2>Bounds input</h2>
-            <div role="group" aria-label="Choose the bounds input shape">
+            <h2>Corners input</h2>
+            <div role="group" aria-label="Choose how the corners are given">
                 <button type="button" data-shape="corners" aria-pressed="true">Corners</button>
-                <button type="button" data-shape="bounds" aria-pressed="false">LatLngBounds</button>
                 <button type="button" data-shape="points" aria-pressed="false">Point array</button>
             </div>
             <p id="version"></p>
@@ -169,7 +168,6 @@
                 bottomLeft: new L.LatLng(6.98185, -122.817032)
             }
         };
-        var NORTH_UP = { url: 'media/pacific.mp4', bounds: [[32, -130], [13, -100]] };
 
         function buildMap(id) {
             var map = new L.Map(id);
@@ -197,36 +195,20 @@
             return new L.Marker(ROTATED.corners[label]).addTo(pluginMap).bindPopup(label);
         });
 
-        // A LatLngBounds is axis-aligned by definition, so it cannot describe the
-        // rotated clip's footprint - that shape gets the north-up clip instead, and
-        // each shape is shown on footage it can actually register.
-        var layer = null;
+        // Both shapes describe the same footprint with the same clip, so switching
+        // re-corners the existing layer rather than rebuilding it - and the video
+        // should not move at all.
+        var layer = L.distortableVideoOverlay(ROTATED.url, ROTATED.corners, VIDEO_OPTIONS).addTo(pluginMap);
 
         var shapes = {
-            corners: function () {
-                layer = L.distortableVideoOverlay(ROTATED.url, ROTATED.corners, VIDEO_OPTIONS);
-                return labels.map(function (l) { return ROTATED.corners[l]; });
-            },
-            bounds: function () {
-                // setBounds() is the call that used to throw on Leaflet 2, because it
-                // reaches L.latLngBounds() - the one factory the plugin depended on.
-                layer = L.distortableVideoOverlay(NORTH_UP.url, ROTATED.corners, VIDEO_OPTIONS);
-                layer.setBounds(NORTH_UP.bounds);
-                var box = new L.LatLngBounds(NORTH_UP.bounds);
-                return [box.getNorthWest(), box.getNorthEast(), box.getSouthEast(), box.getSouthWest()];
-            },
+            corners: function () { layer.setCorners(ROTATED.corners); },
             points: function () {
-                var clockwise = labels.map(function (l) { return ROTATED.corners[l]; });
-                layer = L.distortableVideoOverlay(ROTATED.url, clockwise, VIDEO_OPTIONS);
-                return clockwise;
+                layer.setCorners(labels.map(function (l) { return ROTATED.corners[l]; }));
             }
         };
 
         function selectShape(name) {
-            if (layer) { layer.remove(); }
-            var corners = shapes[name]();
-            layer.addTo(pluginMap);
-            corners.forEach(function (corner, index) { markers[index].setLatLng(corner); });
+            shapes[name]();
         }
 
         selectShape('corners');
