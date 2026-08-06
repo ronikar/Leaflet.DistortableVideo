@@ -3,46 +3,19 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Rotated map &mdash; Leaflet.DistortableVideo</title>
-    <link rel="stylesheet" href="vendor/leaflet-rotate-map.css" />
+    <title>Corners object &mdash; Leaflet.DistortableVideo</title>
+    <link rel="stylesheet" href="vendor/leaflet.css"/>
     <link rel="stylesheet" type="text/css" href="main.css">
-    <style>
-        #controls {
-            position: absolute;
-            z-index: 1000;
-            top: 10px;
-            right: 10px;
-            background: #fff;
-            border: 1px solid #bbb;
-            border-radius: 5px;
-            padding: 10px 12px;
-            font: 13px/1.5 sans-serif;
-            box-shadow: 0 1px 5px rgba(0, 0, 0, .4);
-        }
-
-        #controls label {
-            display: block;
-            margin-bottom: 6px;
-        }
-    </style>
 </head>
 
 <body>
     <a id="back" href="./">&larr; All examples</a>
     <div id="map"></div>
 
-    <div id="controls">
-        <label>bearing <b><span id="bearingValue">45</span>&deg;</b></label>
-        <input id="bearing" type="range" min="0" max="360" step="1" value="45">
-    </div>
-
-    <!-- leaflet-rotate-map is a drop-in replacement for leaflet, not an add-on:
-         it provides the whole L namespace plus map rotation. -->
-    <script src="vendor/leaflet-rotate-map.js" type="text/javascript"></script>
-    <script src="../dist/index.js" type="text/javascript"></script>
+    <script src="vendor/leaflet.js"></script>
+    <script src="../dist/index.js" type="text/javascript" /></script>
     <script>
-        // `rotate: true` is what enables map.setBearing().
-        var map = L.map('map', { rotate: true });
+        var map = L.map('map');
 
         // Offline fallback: a static basemap in a pane below the tiles. When the
         // tile layer loads it covers this completely; with no network it is what
@@ -55,7 +28,8 @@
 
         L.tileLayer('https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 18,
-            attribution: 'Map data &copy; <a href="https://developers.arcgis.com">ArcGis</a>'
+            attribution: 'Map data &copy; <a href="https://developers.arcgis.com">ArcGis</a>',
+            id: 'mapbox.satellite'
         }).addTo(map);
 
         var mapBounds = [[6.9, -133.2], [37.1, -96.8]];
@@ -68,7 +42,7 @@
         var topRight = L.latLng([37.034354, -107.182968]);
         var bottomRight = L.latLng([21.477765, -96.83627]);
         var bottomLeft = L.latLng([6.98185, -122.817032]);
-        var corners = { topLeft: topLeft, topRight: topRight, bottomRight: bottomRight, bottomLeft: bottomLeft };
+        var corners = { topLeft, topRight, bottomRight, bottomLeft };
 
         map.fitBounds(mapBounds);
 
@@ -85,21 +59,8 @@
         addMarker(topRight, "I'm topRight :p");
         addMarker(bottomRight, "I'm bottomRight :o");
         addMarker(bottomLeft, "I'm bottomLeft <3");
-
-        // Rotate the map. The overlay needs no special handling: the video lives
-        // inside the rotate pane, so the pane's rotation composes with the
-        // matrix3d the plugin computes from unrotated layer points.
-        var slider = document.getElementById('bearing');
-        var readout = document.getElementById('bearingValue');
-
-        function applyBearing() {
-            readout.textContent = slider.value;
-            map.setBearing(Number(slider.value));
-        }
-
-        slider.addEventListener('input', applyBearing);
-        applyBearing();
     </script>
+
 </body>
 
 </html>
