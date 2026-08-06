@@ -3,54 +3,340 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Demo</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""/>
-    <link rel="stylesheet" type="text/css" href="main.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Examples &mdash; Leaflet.DistortableVideo</title>
+    <meta name="description"
+        content="Live examples of Leaflet.DistortableVideo, a Leaflet plugin that warps an HTML5 video onto four map corners with CSS 3D transforms.">
+    <style>
+        :root {
+            --bg: #f6f7f4;
+            --surface: #ffffff;
+            --border: #dfe2dc;
+            --border-strong: #c3c8bf;
+            --ink: #1b2027;
+            --ink-soft: #58616d;
+            --ink-faint: #7d8794;
+            --accent: #1667c4;
+            --v1-bg: #e6efe8;
+            --v1-ink: #26694a;
+            --v2-bg: #e7edf7;
+            --v2-ink: #1e5099;
+            --alpha-bg: #f6ecd8;
+            --alpha-ink: #7a5713;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #14171c;
+                --surface: #1c2027;
+                --border: #2b313a;
+                --border-strong: #3d4550;
+                --ink: #e7eaee;
+                --ink-soft: #a8b1bd;
+                --ink-faint: #7d8794;
+                --accent: #74b3ff;
+                --v1-bg: #1c3527;
+                --v1-ink: #7fd0a2;
+                --v2-bg: #1a2b45;
+                --v2-ink: #8dbcf5;
+                --alpha-bg: #3a2f16;
+                --alpha-ink: #e0bc6a;
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page {
+            max-width: 940px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        /* ── Header ──────────────────────────────────────────────────── */
+        header {
+            padding-bottom: 26px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: clamp(26px, 4.4vw, 34px);
+            line-height: 1.15;
+            letter-spacing: -0.015em;
+        }
+
+        .tagline {
+            margin: 0 0 18px;
+            max-width: 62ch;
+            color: var(--ink-soft);
+            font-size: 17px;
+        }
+
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            font-size: 14.5px;
+        }
+
+        a { color: var(--accent); }
+
+        a:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+            border-radius: 3px;
+        }
+
+        /* ── Version sections ────────────────────────────────────────── */
+        section { margin-bottom: 44px; }
+
+        .sec-head {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 19px;
+            letter-spacing: -0.005em;
+        }
+
+        .badge {
+            font: 600 11.5px/1 ui-monospace, Menlo, monospace;
+            letter-spacing: 0.05em;
+            padding: 4px 9px;
+            border-radius: 20px;
+        }
+
+        .badge.v1 { background: var(--v1-bg); color: var(--v1-ink); }
+        .badge.v2 { background: var(--v2-bg); color: var(--v2-ink); }
+        .badge.alpha { background: var(--alpha-bg); color: var(--alpha-ink); }
+
+        .sec-note {
+            margin: 0 0 18px;
+            max-width: 68ch;
+            color: var(--ink-soft);
+            font-size: 14.5px;
+        }
+
+        /* ── Example cards ───────────────────────────────────────────── */
+        ul.cards {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            display: grid;
+            grid-template-columns: 62px 1fr;
+            gap: 14px;
+            align-items: start;
+            height: 100%;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface);
+            color: inherit;
+            text-decoration: none;
+            transition: border-color .14s ease, transform .14s ease;
+        }
+
+        .card:hover {
+            border-color: var(--border-strong);
+            transform: translateY(-2px);
+        }
+
+        .card:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        .card svg { display: block; width: 62px; height: 46px; }
+        .card svg .quad { fill: color-mix(in srgb, var(--accent) 16%, transparent); stroke: var(--accent); stroke-width: 2; }
+        .card svg .dot { fill: var(--accent); }
+        .card svg .frame { fill: none; stroke: var(--border-strong); stroke-width: 1.5; }
+
+        .card h3 {
+            margin: 0 0 3px;
+            font-size: 15.5px;
+            line-height: 1.3;
+        }
+
+        .card p {
+            margin: 0;
+            color: var(--ink-soft);
+            font-size: 13.5px;
+            line-height: 1.5;
+        }
+
+        .card code {
+            font-family: ui-monospace, Menlo, monospace;
+            font-size: 12.5px;
+            background: var(--bg);
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+
+        footer {
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            color: var(--ink-faint);
+            font-size: 13.5px;
+        }
+
+        footer p { margin: 0 0 8px; max-width: 70ch; }
+
+        @media (max-width: 560px) {
+            .page { padding: 32px 16px 56px; }
+        }
+    </style>
 </head>
 
 <body>
-    <div id="map"></div>
+    <div class="page">
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""></script>
-    <script src="../dist/index.js" type="text/javascript" /></script>
-    <script>
-        var map = L.map('map');
+        <header>
+            <h1>Leaflet.DistortableVideo</h1>
+            <p class="tagline">Warps an HTML5 video onto four arbitrary map corners using CSS 3D transforms, so
+                footage can be registered to the ground it was filmed over. Every example below is live &mdash; pan
+                and zoom the map.</p>
+            <nav class="links" aria-label="Project links">
+                <a href="https://github.com/ronikar/Leaflet.DistortableVideo">GitHub</a>
+                <a href="https://www.npmjs.com/package/leaflet-distortable-video">npm</a>
+                <a href="https://github.com/ronikar/Leaflet.DistortableVideo#readme">Documentation</a>
+            </nav>
+        </header>
 
-        L.tileLayer('https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 18,
-            attribution: 'Map data &copy; <a href="https://developers.arcgis.com">ArcGis</a>',
-            id: 'mapbox.satellite'
-        }).addTo(map);
+        <section aria-labelledby="lf1">
+            <div class="sec-head">
+                <h2 id="lf1">Leaflet 1</h2>
+                <span class="badge v1">1.9.4</span>
+            </div>
+            <p class="sec-note">The three ways to position the video, plus a rotated map. These use Leaflet 1's
+                lowercase factories (<code>L.map</code>, <code>L.latLng</code>).</p>
 
-        var mapBounds = [[32, -130], [13, -100]];
+            <ul class="cards">
+                <li>
+                    <a class="card" href="corners.html">
+                        <svg viewBox="0 0 62 46" aria-hidden="true" focusable="false">
+                            <rect class="frame" x="1" y="1" width="60" height="44" rx="3" />
+                            <path class="quad" d="M11 13 L52 8 L55 38 L8 34 Z" />
+                            <circle class="dot" cx="11" cy="13" r="2.4" />
+                            <circle class="dot" cx="52" cy="8" r="2.4" />
+                            <circle class="dot" cx="55" cy="38" r="2.4" />
+                            <circle class="dot" cx="8" cy="34" r="2.4" />
+                        </svg>
+                        <div>
+                            <h3>Corners object</h3>
+                            <p>Four named corners. The general case &mdash; an irregular quad with perspective.</p>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a class="card" href="bounds.html">
+                        <svg viewBox="0 0 62 46" aria-hidden="true" focusable="false">
+                            <rect class="frame" x="1" y="1" width="60" height="44" rx="3" />
+                            <rect class="quad" x="10" y="11" width="42" height="24" />
+                            <circle class="dot" cx="10" cy="11" r="2.4" />
+                            <circle class="dot" cx="52" cy="35" r="2.4" />
+                        </svg>
+                        <div>
+                            <h3>LatLngBounds</h3>
+                            <p>Two opposite corners. Axis-aligned, so it takes the plain scale-and-translate path.</p>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a class="card" href="pointArray.html">
+                        <svg viewBox="0 0 62 46" aria-hidden="true" focusable="false">
+                            <rect class="frame" x="1" y="1" width="60" height="44" rx="3" />
+                            <path class="quad" d="M11 13 L52 8 L55 38 L8 34 Z" />
+                            <circle class="dot" cx="11" cy="13" r="3.2" />
+                            <circle class="dot" cx="52" cy="8" r="2.4" />
+                            <circle class="dot" cx="55" cy="38" r="2.4" />
+                            <circle class="dot" cx="8" cy="34" r="2.4" />
+                        </svg>
+                        <div>
+                            <h3>Point array</h3>
+                            <p>The same four corners as a clockwise array, starting from top-left.</p>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a class="card" href="rotate.html">
+                        <svg viewBox="0 0 62 46" aria-hidden="true" focusable="false">
+                            <rect class="frame" x="1" y="1" width="60" height="44" rx="3" />
+                            <path class="quad" d="M20 6 L56 20 L42 40 L6 26 Z" />
+                            <circle class="dot" cx="20" cy="6" r="2.4" />
+                            <circle class="dot" cx="56" cy="20" r="2.4" />
+                            <circle class="dot" cx="42" cy="40" r="2.4" />
+                            <circle class="dot" cx="6" cy="26" r="2.4" />
+                        </svg>
+                        <div>
+                            <h3>Rotated map</h3>
+                            <p>Bearing 0&ndash;360&deg; via <code>leaflet-rotate-map</code>. No plugin changes needed.</p>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </section>
 
-        var topLeft = L.latLng([30.6, -129]);
-        var topRight = L.latLng([32, -100]);
-        var bottomRight = L.latLng([13, -97]);
-        var bottomLeft = L.latLng([13, -130]);
-        var corners = { topLeft, topRight, bottomRight, bottomLeft };
+        <section aria-labelledby="lf2">
+            <div class="sec-head">
+                <h2 id="lf2">Leaflet 2</h2>
+                <span class="badge v2">2.0.0-alpha.1</span>
+                <span class="badge alpha">alpha</span>
+            </div>
+            <p class="sec-note">Leaflet 2 replaced the factories with constructors (<code>new L.Map</code>) and made
+                the ES module the default entry point, so a script-tag page loads
+                <code>dist/leaflet-global.js</code>. The plugin itself needs no version switch &mdash; the same build
+                serves both.</p>
 
-        map.fitBounds(mapBounds);
+            <ul class="cards">
+                <li>
+                    <a class="card" href="leaflet2.html">
+                        <svg viewBox="0 0 62 46" aria-hidden="true" focusable="false">
+                            <rect class="frame" x="1" y="1" width="60" height="44" rx="3" />
+                            <path class="quad" d="M11 13 L52 8 L55 38 L8 34 Z" />
+                            <circle class="dot" cx="11" cy="13" r="2.4" />
+                            <circle class="dot" cx="52" cy="8" r="2.4" />
+                            <circle class="dot" cx="55" cy="38" r="2.4" />
+                            <circle class="dot" cx="8" cy="34" r="2.4" />
+                        </svg>
+                        <div>
+                            <h3>Leaflet 2, all three inputs</h3>
+                            <p>Switch between corners, <code>LatLngBounds</code> and point array to check each one
+                                against the same map.</p>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </section>
 
-        var layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patricia_nasa.mp4", corners, {
-            muted: true,
-            opacity: 0.8
-        }).addTo(map);
+        <footer>
+            <p>Leaflet 2 is still an alpha release. The plugin works with it today, but it overrides several of
+                Leaflet's internal overlay methods, so treat 2.x support as provisional until Leaflet 2 stabilises.</p>
+            <p>The demo footage is NOAA GOES 15 imagery of Hurricane Patricia, 21 October 2015, via the NASA GSFC
+                GOES Project.</p>
+        </footer>
 
-        function addMarker(point, text) {
-            L.marker(point).addTo(map).bindPopup(text);
-        }
-
-        addMarker(topLeft, "I'm topLeft :)");
-        addMarker(topRight, "I'm topRight :p");
-        addMarker(bottomRight, "I'm bottomRight :o");
-        addMarker(bottomLeft, "I'm bottomLeft <3");
-    </script>
-
+    </div>
 </body>
 
 </html>

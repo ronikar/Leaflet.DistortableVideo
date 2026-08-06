@@ -2,11 +2,19 @@
 Enable to distort videos on Leaflet maps. Leaflet.DistortableVideo allows for perspective distortions of images, client-side, using CSS3 transformations in the DOM.
 
 ## Demo
-https://ronikar.github.io/Leaflet.DistortableVideo/examples/
+**https://ronikar.github.io/Leaflet.DistortableVideo/examples/**
+
+| Example | Leaflet | Shows |
+| --- | --- | --- |
+| [`corners.html`](examples/corners.html) | 1.9.4 | Four named corners — the general perspective case |
+| [`bounds.html`](examples/bounds.html) | 1.9.4 | `LatLngBounds` input, axis-aligned |
+| [`pointArray.html`](examples/pointArray.html) | 1.9.4 | The same corners as a clockwise array |
+| [`rotate.html`](examples/rotate.html) | 1.9.4 | Rotated map via `leaflet-rotate-map` |
+| [`leaflet2.html`](examples/leaflet2.html) | 2.0.0-alpha.1 | All three input shapes on Leaflet 2 |
 
 ## Requirements
 ### Dependancies
-* Leaflet 1.^
+* Leaflet 1.x or 2.x — the same build supports both, see [Leaflet 2](#leaflet-2)
 
 ### Browser Compatibility
 Your browser must support the next features
@@ -94,6 +102,38 @@ L.distortableVideoOverlay(videoUrl, corners, { opacity: 0.8 }).addTo(map);
 
 map.setBearing(45);
 ```
+
+### Leaflet 2
+
+The same build works on Leaflet 1 and Leaflet 2 — there is no separate entry point and no
+version switch. See [`examples/leaflet2.html`](examples/leaflet2.html).
+
+Two things change on the **calling** side, not in this plugin:
+
+* Leaflet 2 removed the lowercase factories, so `L.map(...)` becomes `new L.Map(...)`,
+  `L.latLng(...)` becomes `new L.LatLng(...)`, and so on.
+* Leaflet 2's default entry point is an ES module. A plain `<script>` page needs the build
+  that still exposes the global `L`:
+
+```html
+<script src="https://unpkg.com/leaflet@2.0.0-alpha.1/dist/leaflet-global.js"></script>
+<script src="dist/index.js"></script>
+```
+
+```js
+const map = new L.Map('map');
+
+L.distortableVideoOverlay(videoUrl, corners, { opacity: 0.8 }).addTo(map);
+```
+
+All three `corners` shapes — the named-corners object, a `LatLngBounds`, and a point array —
+behave identically on both majors.
+
+> **Leaflet 2 support is provisional.** 2.0.0-alpha.1 is still an alpha, and this plugin
+> overrides several of Leaflet's internal overlay methods (`_initImage`, `_reset`,
+> `_animateZoom`). Those carry no compatibility guarantee across a major that has not
+> stabilised yet. TypeScript users should also note that `@types/leaflet` has no 2.x release,
+> and Leaflet 2 ships no type declarations of its own.
 
 ### Module Loaders
 The index file is built by using `rollup` into a UMD bundle, so it can be loaded with a plain

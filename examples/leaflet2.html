@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Leaflet 2 &mdash; Leaflet.DistortableVideo</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@2.0.0-alpha.1/dist/leaflet.css" />
+    <link rel="stylesheet" type="text/css" href="main.css">
+    <style>
+        #shapes {
+            position: absolute;
+            z-index: 1000;
+            top: 20px;
+            right: 20px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+            font: 13px/1.4 system-ui, -apple-system, sans-serif;
+            color: #1e2530;
+        }
+
+        #shapes h2 {
+            margin: 0 0 8px;
+            font-size: 11px;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: #5c6675;
+        }
+
+        #shapes div {
+            display: flex;
+            gap: 6px;
+        }
+
+        #shapes button {
+            font: 600 12.5px/1 system-ui, -apple-system, sans-serif;
+            padding: 7px 11px;
+            border: 1px solid #c6ccd6;
+            border-radius: 5px;
+            background: #fff;
+            color: #1e2530;
+            cursor: pointer;
+        }
+
+        #shapes button[aria-pressed="true"] {
+            background: #1667c4;
+            border-color: #1667c4;
+            color: #fff;
+        }
+
+        #shapes button:focus-visible {
+            outline: 2px solid #1667c4;
+            outline-offset: 2px;
+        }
+
+        #version {
+            margin-top: 10px;
+            font-size: 11.5px;
+            color: #5c6675;
+        }
+    </style>
+</head>
+
+<body>
+    <a id="back" href="./">&larr; All examples</a>
+
+    <section id="shapes">
+        <h2>Bounds input</h2>
+        <div role="group" aria-label="Choose the bounds input shape">
+            <button type="button" data-shape="corners" aria-pressed="true">Corners</button>
+            <button type="button" data-shape="bounds" aria-pressed="false">LatLngBounds</button>
+            <button type="button" data-shape="points" aria-pressed="false">Point array</button>
+        </div>
+        <p id="version"></p>
+    </section>
+
+    <div id="map"></div>
+
+    <!-- Leaflet 2's default entry point is an ES module. `leaflet-global.js` is the
+         build that still exposes the global `L`, which is what a plain <script>
+         page and this plugin's UMD bundle both expect. -->
+    <script src="https://unpkg.com/leaflet@2.0.0-alpha.1/dist/leaflet-global.js"></script>
+    <script src="../dist/index.js"></script>
+    <script>
+        // Leaflet 2 replaced the lowercase factories with constructors:
+        //   L.map(...)       ->  new L.Map(...)
+        //   L.latLng(...)    ->  new L.LatLng(...)
+        //   L.tileLayer(...) ->  new L.TileLayer(...)
+        var map = new L.Map('map');
+
+        new L.TileLayer('https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            maxZoom: 18,
+            attribution: 'Map data &copy; <a href="https://developers.arcgis.com">ArcGis</a>'
+        }).addTo(map);
+
+        var mapBounds = [[32, -130], [13, -100]];
+
+        var topLeft = new L.LatLng(30.6, -129);
+        var topRight = new L.LatLng(32, -100);
+        var bottomRight = new L.LatLng(13, -97);
+        var bottomLeft = new L.LatLng(13, -130);
+
+        map.fitBounds(mapBounds);
+
+        var layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patricia_nasa.mp4", {
+            topLeft: topLeft, topRight: topRight, bottomRight: bottomRight, bottomLeft: bottomLeft
+        }, {
+            muted: true,
+            opacity: 0.8
+        }).addTo(map);
+
+        [[topLeft, "topLeft"], [topRight, "topRight"], [bottomRight, "bottomRight"], [bottomLeft, "bottomLeft"]]
+            .forEach(function (pair) {
+                new L.Marker(pair[0]).addTo(map).bindPopup(pair[1]);
+            });
+
+        // All three input shapes are accepted on Leaflet 2, including LatLngBounds,
+        // which reaches the plugin's own bounds handling.
+        var shapes = {
+            corners: function () {
+                layer.setCorners({
+                    topLeft: topLeft, topRight: topRight, bottomRight: bottomRight, bottomLeft: bottomLeft
+                });
+            },
+            bounds: function () {
+                layer.setBounds(mapBounds);
+            },
+            points: function () {
+                layer.setCorners([topLeft, topRight, bottomRight, bottomLeft]);
+            }
+        };
+
+        var buttons = document.querySelectorAll('#shapes button');
+        buttons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                buttons.forEach(function (other) {
+                    other.setAttribute('aria-pressed', String(other === button));
+                });
+                shapes[button.dataset.shape]();
+            });
+        });
+
+        document.getElementById('version').textContent = 'Running Leaflet ' + L.version;
+    </script>
+</body>
+
+</html>

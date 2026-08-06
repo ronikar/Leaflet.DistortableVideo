@@ -114,7 +114,12 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
     },
 
     _boundsToCorners: function (bounds) {
-        bounds = L.latLngBounds(bounds);
+        // Leaflet 2 removed the lowercase factories, so L.latLngBounds() is gone.
+        // Its LatLngBounds constructor accepts everything the factory did except an
+        // existing LatLngBounds - and Leaflet 1's constructor rejects that too - so
+        // keep the factory's identity shortcut explicitly. This branches on the
+        // input rather than on which Leaflet is loaded, and works on both majors.
+        bounds = bounds instanceof L.LatLngBounds ? bounds : new L.LatLngBounds(bounds);
 
         return {
             topLeft: bounds.getNorthWest(),
