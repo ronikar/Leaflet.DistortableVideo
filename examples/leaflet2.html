@@ -3,35 +3,74 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Leaflet 2 &mdash; Leaflet.DistortableVideo</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@2.0.0-alpha.1/dist/leaflet.css" />
-    <link rel="stylesheet" type="text/css" href="main.css">
     <style>
-        #shapes {
-            position: absolute;
-            z-index: 1000;
-            top: 20px;
-            right: 20px;
-            padding: 12px 14px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
-            font: 13px/1.4 system-ui, -apple-system, sans-serif;
+        html, body { height: 100%; margin: 0; }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
             color: #1e2530;
         }
 
+        .pane { position: relative; flex: 1 1 50%; min-height: 0; border-top: 1px solid #c6ccd6; }
+        .pane:first-of-type { border-top: 0; }
+        .pane .map { position: absolute; inset: 0; }
+
+        /* Caption strip naming what each half is doing. */
+        .caption {
+            position: absolute;
+            z-index: 1000;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 9px 14px;
+            background: rgba(255, 255, 255, 0.94);
+            border-top: 1px solid #d6dbe2;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .caption b { font-size: 13.5px; }
+        .caption span { color: #5c6675; }
+
+        .verdict {
+            font: 600 10.5px/1 ui-monospace, Menlo, monospace;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+
+        .verdict.good { background: #dcefe3; color: #26694a; }
+        .verdict.bad { background: #f6dedb; color: #94322a; }
+
+        #shapes {
+            position: absolute;
+            z-index: 1000;
+            top: 14px;
+            right: 14px;
+            padding: 11px 13px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+        }
+
         #shapes h2 {
-            margin: 0 0 8px;
-            font-size: 11px;
+            margin: 0 0 7px;
+            font-size: 10.5px;
             letter-spacing: 0.07em;
             text-transform: uppercase;
             color: #5c6675;
         }
 
-        #shapes div {
-            display: flex;
-            gap: 6px;
-        }
+        #shapes div { display: flex; gap: 6px; }
 
         #shapes button {
             font: 600 12.5px/1 system-ui, -apple-system, sans-serif;
@@ -43,40 +82,67 @@
             cursor: pointer;
         }
 
-        #shapes button[aria-pressed="true"] {
-            background: #1667c4;
-            border-color: #1667c4;
-            color: #fff;
+        #shapes button[aria-pressed="true"] { background: #1667c4; border-color: #1667c4; color: #fff; }
+        #shapes button:focus-visible { outline: 2px solid #1667c4; outline-offset: 2px; }
+
+        #version { margin: 9px 0 0; font-size: 11.5px; color: #5c6675; }
+
+        #back {
+            position: absolute;
+            z-index: 1001;
+            top: 14px;
+            left: 60px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+            color: #1e2530;
+            font-weight: 600;
+            text-decoration: none;
         }
 
-        #shapes button:focus-visible {
-            outline: 2px solid #1667c4;
-            outline-offset: 2px;
-        }
+        /* The caption bar occupies the bottom edge, so move Leaflet's attribution
+           above it rather than letting the two overlap. */
+        .leaflet-control-attribution { margin-bottom: 34px !important; }
 
-        #version {
-            margin-top: 10px;
-            font-size: 11.5px;
-            color: #5c6675;
-        }
+        #back:hover { background: #fff; }
+        #back:focus-visible { outline: 2px solid #1667c4; outline-offset: 2px; }
     </style>
 </head>
 
 <body>
     <a id="back" href="./">&larr; All examples</a>
 
-    <section id="shapes">
-        <h2>Bounds input</h2>
-            <p style="margin:0 0 8px;font-size:12px;color:#5c6675">Corners and point array carry footage stored 30&deg; off north-up. <code>LatLngBounds</code> is axis-aligned, so it gets the north-up clip.</p>
-        <div role="group" aria-label="Choose the bounds input shape">
-            <button type="button" data-shape="corners" aria-pressed="true">Corners</button>
-            <button type="button" data-shape="bounds" aria-pressed="false">LatLngBounds</button>
-            <button type="button" data-shape="points" aria-pressed="false">Point array</button>
+    <section class="pane" aria-label="With Leaflet.DistortableVideo">
+        <div class="map" id="withPlugin"></div>
+
+        <section id="shapes">
+            <h2>Bounds input</h2>
+            <div role="group" aria-label="Choose the bounds input shape">
+                <button type="button" data-shape="corners" aria-pressed="true">Corners</button>
+                <button type="button" data-shape="bounds" aria-pressed="false">LatLngBounds</button>
+                <button type="button" data-shape="points" aria-pressed="false">Point array</button>
+            </div>
+            <p id="version"></p>
+        </section>
+
+        <div class="caption">
+            <span class="verdict good">registered</span>
+            <b>With Leaflet.DistortableVideo</b>
+            <span>Four corners, so the footage is rotated back onto the ground it covers &mdash; the coastlines
+                continue into the basemap.</span>
         </div>
-        <p id="version"></p>
     </section>
 
-    <div id="map"></div>
+    <section class="pane" aria-label="With stock Leaflet VideoOverlay">
+        <div class="map" id="stockLeaflet"></div>
+        <div class="caption">
+            <span class="verdict bad">misplaced</span>
+            <b>Stock <code>L.VideoOverlay</code></b>
+            <span>The same clip, same Leaflet. A <code>LatLngBounds</code> is all it accepts, so the footage can
+                only be dropped into an upright box &mdash; its coastlines end up 30&deg; off the land underneath.</span>
+        </div>
+    </section>
 
     <!-- Leaflet 2's default entry point is an ES module. `leaflet-global.js` is the
          build that still exposes the global `L`, which is what a plain <script>
@@ -88,12 +154,9 @@
         //   L.map(...)       ->  new L.Map(...)
         //   L.latLng(...)    ->  new L.LatLng(...)
         //   L.tileLayer(...) ->  new L.TileLayer(...)
-        var map = new L.Map('map');
-
-        new L.TileLayer('https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 18,
-            attribution: 'Map data &copy; <a href="https://developers.arcgis.com">ArcGis</a>'
-        }).addTo(map);
+        var TILES = 'https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+        var VIEW = [[6.9, -133.2], [37.1, -96.8]];
+        var VIDEO_OPTIONS = { muted: true, autoplay: true, loop: true, opacity: 0.85 };
 
         // The rotated clip is stored 30 degrees off north-up; these are the corners
         // of the ground it actually covers. The north-up clip covers a plain box.
@@ -108,20 +171,26 @@
         };
         var NORTH_UP = { url: 'media/pacific.mp4', bounds: [[32, -130], [13, -100]] };
 
-        map.fitBounds([[6.9, -133.2], [37.1, -96.8]]);
+        function buildMap(id) {
+            var map = new L.Map(id);
+            new L.TileLayer(TILES, { maxZoom: 18, attribution: 'Map data &copy; ArcGis' }).addTo(map);
+            map.fitBounds(VIEW);
+            return map;
+        }
 
+        var pluginMap = buildMap('withPlugin');
+        var stockMap = buildMap('stockLeaflet');
+
+        // ── Top: the plugin ──────────────────────────────────────────────────
         var labels = ["topLeft", "topRight", "bottomRight", "bottomLeft"];
         var markers = labels.map(function (label) {
-            return new L.Marker(ROTATED.corners[label]).addTo(map).bindPopup(label);
+            return new L.Marker(ROTATED.corners[label]).addTo(pluginMap).bindPopup(label);
         });
 
         // A LatLngBounds is axis-aligned by definition, so it cannot describe the
         // rotated clip's footprint - that shape gets the north-up clip instead, and
-        // each shape is shown on footage it can actually register. Swapping the clip
-        // means rebuilding the layer, which is a couple of lines and keeps every
-        // mode honest rather than leaving one of them misplaced.
+        // each shape is shown on footage it can actually register.
         var layer = null;
-        var VIDEO_OPTIONS = { muted: true, autoplay: true, loop: true, opacity: 0.85 };
 
         var shapes = {
             corners: function () {
@@ -146,7 +215,7 @@
         function selectShape(name) {
             if (layer) { layer.remove(); }
             var corners = shapes[name]();
-            layer.addTo(map);
+            layer.addTo(pluginMap);
             corners.forEach(function (corner, index) { markers[index].setLatLng(corner); });
         }
 
@@ -161,6 +230,35 @@
                 selectShape(button.dataset.shape);
             });
         });
+
+        // ── Bottom: what Leaflet alone can do with the same clip ─────────────
+        //
+        // L.VideoOverlay takes a LatLngBounds and nothing else, so the best it can
+        // be given is the bounding box of the rotated footprint. The footage is
+        // then stretched upright into that box: the coastlines sit at the wrong
+        // angle and run off the edges of the land underneath.
+        var footprint = new L.LatLngBounds([
+            ROTATED.corners.topLeft, ROTATED.corners.topRight,
+            ROTATED.corners.bottomRight, ROTATED.corners.bottomLeft
+        ]);
+        new L.VideoOverlay(ROTATED.url, footprint, VIDEO_OPTIONS).addTo(stockMap);
+
+        new L.Rectangle(footprint, {
+            color: '#94322a', weight: 1.5, dashArray: '5 4', fill: false, interactive: false
+        }).addTo(stockMap);
+
+        // Keep both halves showing the same place so the comparison is fair.
+        var syncing = false;
+        function sync(from, to) {
+            from.on('move zoom', function () {
+                if (syncing) return;
+                syncing = true;
+                to.setView(from.getCenter(), from.getZoom(), { animate: false });
+                syncing = false;
+            });
+        }
+        sync(pluginMap, stockMap);
+        sync(stockMap, pluginMap);
 
         document.getElementById('version').textContent = 'Running Leaflet ' + L.version;
     </script>
