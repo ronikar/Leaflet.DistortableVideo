@@ -27,17 +27,21 @@
             id: 'mapbox.satellite'
         }).addTo(map);
 
-        var mapBounds = [[32, -130], [13, -100]];
+        var mapBounds = [[6.9, -133.2], [37.1, -96.8]];
 
-        var topLeft = L.latLng([30.6, -129]);
-        var topRight = L.latLng([32, -100]);
-        var bottomRight = L.latLng([13, -97]);
-        var bottomLeft = L.latLng([13, -130]);
+        // media/pacific-rotated.mp4 is satellite imagery stored 30 degrees off
+        // north-up. These are the corners of the ground it actually covers, so the
+        // overlay has to rotate it back into place - which is the whole job of this
+        // plugin. Without that, footage like this could not sit on a map at all.
+        var topLeft = L.latLng([24.169729, -133.16373]);
+        var topRight = L.latLng([37.034354, -107.182968]);
+        var bottomRight = L.latLng([21.477765, -96.83627]);
+        var bottomLeft = L.latLng([6.98185, -122.817032]);
         var corners = { topLeft, topRight, bottomRight, bottomLeft };
 
         map.fitBounds(mapBounds);
 
-        var layer = L.distortableVideoOverlay("media/pacific.mp4", corners, {
+        var layer = L.distortableVideoOverlay("media/pacific-rotated.mp4", corners, {
             muted: true,
             opacity: 0.8
         }).addTo(map);

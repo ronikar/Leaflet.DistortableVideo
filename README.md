@@ -6,12 +6,11 @@ Enable to distort videos on Leaflet maps. Leaflet.DistortableVideo allows for pe
 
 | Example | Leaflet | Shows |
 | --- | --- | --- |
-| [`corners.html`](examples/corners.html) | 1.9.4 | Four named corners — the general perspective case |
-| [`bounds.html`](examples/bounds.html) | 1.9.4 | `LatLngBounds` input, axis-aligned |
-| [`pointArray.html`](examples/pointArray.html) | 1.9.4 | The same corners as a clockwise array |
-| [`rotate.html`](examples/rotate.html) | 1.9.4 | Rotated map via `leaflet-rotate-map` |
+| [`corners.html`](examples/corners.html) | 1.9.4 | Footage stored 30° off north-up, registered by four named corners |
+| [`bounds.html`](examples/bounds.html) | 1.9.4 | North-up footage, `LatLngBounds` input, axis-aligned |
+| [`pointArray.html`](examples/pointArray.html) | 1.9.4 | The same rotated footage, corners as a clockwise array |
+| [`rotate.html`](examples/rotate.html) | 1.9.4 | Rotated footage on a rotated map via `leaflet-rotate-map` |
 | [`leaflet2.html`](examples/leaflet2.html) | 2.0.0-alpha.1 | All three input shapes on Leaflet 2 |
-| [`rotatedVideo.html`](examples/rotatedVideo.html) | 1.9.4 | Footage stored off north-up, placed back onto the ground |
 
 ## Requirements
 ### Dependancies
@@ -47,7 +46,7 @@ var corners= {
             bottomLeft: L.latLng([13,-130])
 };
 
-let layer = L.distortableVideoOverlay("examples/media/pacific.mp4", corners, {
+let layer = L.distortableVideoOverlay("examples/media/pacific-rotated.mp4", corners, {
   opacity: 0.8
 }).addTo(map);
 ```
@@ -64,7 +63,7 @@ var bottomRight = L.latLng([13, -97]);
 var bottomLeft = L.latLng([13, -130]);
 var corners = [topLeft, topRight, bottomRight, bottomLeft];
 
-let layer = L.distortableVideoOverlay("examples/media/pacific.mp4", corners, {
+let layer = L.distortableVideoOverlay("examples/media/pacific-rotated.mp4", corners, {
   opacity: 0.8
 }).addTo(map);
 ```

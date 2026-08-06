@@ -67,6 +67,7 @@
 
     <section id="shapes">
         <h2>Bounds input</h2>
+            <p style="margin:0 0 8px;font-size:12px;color:#5c6675">All three describe the same footprint &mdash; the video should not move.</p>
         <div role="group" aria-label="Choose the bounds input shape">
             <button type="button" data-shape="corners" aria-pressed="true">Corners</button>
             <button type="button" data-shape="bounds" aria-pressed="false">LatLngBounds</button>
@@ -96,9 +97,12 @@
 
         var mapBounds = [[32, -130], [13, -100]];
 
-        var topLeft = new L.LatLng(30.6, -129);
+        // All three shapes below describe the same footprint - the exact ground
+        // media/pacific.mp4 covers. Switching between them should not move the
+        // video at all; that equivalence is what this page is demonstrating.
+        var topLeft = new L.LatLng(32, -130);
         var topRight = new L.LatLng(32, -100);
-        var bottomRight = new L.LatLng(13, -97);
+        var bottomRight = new L.LatLng(13, -100);
         var bottomLeft = new L.LatLng(13, -130);
 
         map.fitBounds(mapBounds);
