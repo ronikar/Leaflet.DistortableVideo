@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Leaflet 2 &mdash; Leaflet.DistortableVideo</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@2.0.0-alpha.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="vendor/leaflet2.css" />
     <style>
         html, body { height: 100%; margin: 0; }
 
@@ -147,7 +147,7 @@
     <!-- Leaflet 2's default entry point is an ES module. `leaflet-global.js` is the
          build that still exposes the global `L`, which is what a plain <script>
          page and this plugin's UMD bundle both expect. -->
-    <script src="https://unpkg.com/leaflet@2.0.0-alpha.1/dist/leaflet-global.js"></script>
+    <script src="vendor/leaflet2-global.js"></script>
     <script src="../dist/index.js"></script>
     <script>
         // Leaflet 2 replaced the lowercase factories with constructors:
@@ -173,6 +173,16 @@
 
         function buildMap(id) {
             var map = new L.Map(id);
+
+            // Offline fallback: a static basemap in a pane below the tiles. When the
+            // tile layer loads it covers this completely; with no network it is what
+            // you see, so the video still has recognisable ground to be registered
+            // against. media/basemap.jpg is GIBS Blue Marble, requested in EPSG:3857
+            // so an image overlay places it without latitude distortion.
+            map.createPane('fallback');
+            map.getPane('fallback').style.zIndex = 150;
+            new L.ImageOverlay('media/basemap.jpg', [[0, -140], [45, -85]], { pane: 'fallback' }).addTo(map);
+
             new L.TileLayer(TILES, { maxZoom: 18, attribution: 'Map data &copy; ArcGis' }).addTo(map);
             map.fitBounds(VIEW);
             return map;

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Rotated map &mdash; Leaflet.DistortableVideo</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-rotate-map@0.3.2/leaflet.css" />
+    <link rel="stylesheet" href="vendor/leaflet-rotate-map.css" />
     <link rel="stylesheet" type="text/css" href="main.css">
     <style>
         #controls {
@@ -38,11 +38,20 @@
 
     <!-- leaflet-rotate-map is a drop-in replacement for leaflet, not an add-on:
          it provides the whole L namespace plus map rotation. -->
-    <script src="https://unpkg.com/leaflet-rotate-map@0.3.2/leaflet-src.js" type="text/javascript"></script>
+    <script src="vendor/leaflet-rotate-map.js" type="text/javascript"></script>
     <script src="../dist/index.js" type="text/javascript"></script>
     <script>
         // `rotate: true` is what enables map.setBearing().
         var map = L.map('map', { rotate: true });
+
+        // Offline fallback: a static basemap in a pane below the tiles. When the
+        // tile layer loads it covers this completely; with no network it is what
+        // you see, so the video still has recognisable ground to be registered
+        // against. media/basemap.jpg is GIBS Blue Marble, requested in EPSG:3857
+        // so an image overlay places it without latitude distortion.
+        map.createPane('fallback');
+        map.getPane('fallback').style.zIndex = 150;
+        L.imageOverlay('media/basemap.jpg', [[0, -140], [45, -85]], { pane: 'fallback' }).addTo(map);
 
         L.tileLayer('https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 18,

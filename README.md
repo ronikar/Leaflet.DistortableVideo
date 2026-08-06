@@ -154,6 +154,24 @@ projective placement rather than a scale-and-translate.
 
 Requires `ffmpeg` on `PATH`. Run `npm run demo:video -- --help` for all options.
 
+### Running the examples offline
+
+The examples have no network dependencies. Leaflet, `leaflet-rotate-map` and the marker icons are
+vendored under `examples/vendor/`, and both video clips are in `examples/media/`.
+
+The basemap is the one thing that cannot be self-contained — a tile layer needs a tile server. So
+each example also carries a static Blue Marble image (`media/basemap.jpg`, GIBS, public domain) in a
+pane *below* the tile layer. Online the tiles cover it completely; offline it is what you see, so
+the video still has recognisable ground to be registered against. It spans 0–45°N, 140–85°W, which
+covers the demo area; pan outside that and the background is empty.
+
+Serve the folder over HTTP rather than opening the files directly, since browsers block `file://`
+media and XHR:
+
+```sh
+python3 -m http.server 8000    # then open http://localhost:8000/examples/
+```
+
 ### Module Loaders
 The index file is built by using `rollup` into a UMD bundle, so it can be loaded with a plain
 `<script>` tag or through a module loader such as AMD or CommonJS. Run `npm run build` to rebuild
