@@ -228,7 +228,7 @@
                 <h2 id="lf1">Leaflet 1</h2>
                 <span class="badge v1">1.9.4</span>
             </div>
-            <p class="sec-note">The three ways to position the video, plus a rotated map. These use Leaflet 1's
+            <p class="sec-note">Most of these show footage that is <em>not</em> aligned to the map being registered onto the ground it covers &mdash; which is the reason the plugin exists. These use Leaflet 1's
                 lowercase factories (<code>L.map</code>, <code>L.latLng</code>).</p>
 
             <ul class="cards">
@@ -244,7 +244,7 @@
                         </svg>
                         <div>
                             <h3>Corners object</h3>
-                            <p>Four named corners. The general case &mdash; an irregular quad with perspective.</p>
+                            <p>Footage stored 30&deg; off north-up, placed on the ground it actually covers. Four named corners.</p>
                         </div>
                     </a>
                 </li>
@@ -258,7 +258,7 @@
                         </svg>
                         <div>
                             <h3>LatLngBounds</h3>
-                            <p>Two opposite corners. Axis-aligned, so it takes the plain scale-and-translate path.</p>
+                            <p>North-up footage on two opposite corners. Axis-aligned, so it takes the scale-and-translate path.</p>
                         </div>
                     </a>
                 </li>
@@ -274,7 +274,7 @@
                         </svg>
                         <div>
                             <h3>Point array</h3>
-                            <p>The same four corners as a clockwise array, starting from top-left.</p>
+                            <p>The same rotated footage and corners, given as a clockwise array.</p>
                         </div>
                     </a>
                 </li>
@@ -290,7 +290,7 @@
                         </svg>
                         <div>
                             <h3>Rotated map</h3>
-                            <p>Bearing 0&ndash;360&deg; via <code>leaflet-rotate-map</code>. No plugin changes needed.</p>
+                            <p>Rotated footage on a rotated map, bearing 0&ndash;360&deg; via <code>leaflet-rotate-map</code>.</p>
                         </div>
                     </a>
                 </li>
@@ -321,8 +321,7 @@
                         </svg>
                         <div>
                             <h3>Leaflet 2, all three inputs</h3>
-                            <p>Switch between corners, <code>LatLngBounds</code> and point array to check each one
-                                against the same map.</p>
+                            <p>Side by side against stock <code>L.VideoOverlay</code> on the same clip, so you can see what the plugin is actually doing.</p>
                         </div>
                     </a>
                 </li>
@@ -332,8 +331,16 @@
         <footer>
             <p>Leaflet 2 is still an alpha release. The plugin works with it today, but it overrides several of
                 Leaflet's internal overlay methods, so treat 2.x support as provisional until Leaflet 2 stabilises.</p>
-            <p>The demo footage is NOAA GOES 15 imagery of Hurricane Patricia, 21 October 2015, via the NASA GSFC
-                GOES Project.</p>
+            <p>These pages have no network dependencies &mdash; Leaflet and both clips are vendored, and a static
+                Blue Marble image sits below the tile layer so the demos still work with no connection. Online the
+                tiles cover it.</p>
+            <p>The footage is NASA <a href="https://nasa-gibs.github.io/gibs-api-docs/">GIBS</a> VIIRS/SNPP
+                true-colour imagery of the eastern Pacific, 8&ndash;15 October 2024 &mdash; public domain, and
+                self-hosted rather than hotlinked. Both clips are regenerable with
+                <code>npm run demo:video</code>; the settings that produced them are recorded alongside each file.</p>
+            <p>Every example places its footage on the exact ground it covers, so the coastlines continue out of
+                the video and into the basemap. The corner-based demos use a clip stored 30&deg; off north-up: the
+                overlay rotates it back, which is work no plain image overlay can do.</p>
         </footer>
 
     </div>

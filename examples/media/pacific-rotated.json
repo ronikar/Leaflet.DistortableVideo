@@ -1,0 +1,35 @@
+{
+  "source": "NASA Global Imagery Browse Services (GIBS), public domain",
+  "layer": "VIIRS_SNPP_CorrectedReflectance_TrueColor",
+  "dates": [
+    "2024-10-08",
+    "2024-10-09",
+    "2024-10-10",
+    "2024-10-11",
+    "2024-10-12",
+    "2024-10-13",
+    "2024-10-14",
+    "2024-10-15"
+  ],
+  "boundsBeforeRotation": "13,-130,32,-100",
+  "rotationDegrees": 30,
+  "generatedBy": "tools/make-demo-video.mjs",
+  "corners": {
+    "topLeft": {
+      "lat": 24.169729,
+      "lng": -133.16373
+    },
+    "topRight": {
+      "lat": 37.034354,
+      "lng": -107.182968
+    },
+    "bottomRight": {
+      "lat": 21.477765,
+      "lng": -96.83627
+    },
+    "bottomLeft": {
+      "lat": 6.98185,
+      "lng": -122.817032
+    }
+  }
+}

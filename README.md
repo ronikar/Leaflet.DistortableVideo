@@ -6,11 +6,11 @@ Enable to distort videos on Leaflet maps. Leaflet.DistortableVideo allows for pe
 
 | Example | Leaflet | Shows |
 | --- | --- | --- |
-| [`corners.html`](examples/corners.html) | 1.9.4 | Four named corners — the general perspective case |
-| [`bounds.html`](examples/bounds.html) | 1.9.4 | `LatLngBounds` input, axis-aligned |
-| [`pointArray.html`](examples/pointArray.html) | 1.9.4 | The same corners as a clockwise array |
-| [`rotate.html`](examples/rotate.html) | 1.9.4 | Rotated map via `leaflet-rotate-map` |
-| [`leaflet2.html`](examples/leaflet2.html) | 2.0.0-alpha.1 | All three input shapes on Leaflet 2 |
+| [`corners.html`](examples/corners.html) | 1.9.4 | Footage stored 30° off north-up, registered by four named corners |
+| [`bounds.html`](examples/bounds.html) | 1.9.4 | North-up footage, `LatLngBounds` input, axis-aligned |
+| [`pointArray.html`](examples/pointArray.html) | 1.9.4 | The same rotated footage, corners as a clockwise array |
+| [`rotate.html`](examples/rotate.html) | 1.9.4 | Rotated footage on a rotated map via `leaflet-rotate-map` |
+| [`leaflet2.html`](examples/leaflet2.html) | 2.0.0-alpha.1 | Side by side against stock `L.VideoOverlay` |
 
 ## Requirements
 ### Dependancies
@@ -46,7 +46,7 @@ var corners= {
             bottomLeft: L.latLng([13,-130])
 };
 
-let layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patricia_nasa.mp4", corners, {
+let layer = L.distortableVideoOverlay("examples/media/pacific-rotated.mp4", corners, {
   opacity: 0.8
 }).addTo(map);
 ```
@@ -63,7 +63,7 @@ var bottomRight = L.latLng([13, -97]);
 var bottomLeft = L.latLng([13, -130]);
 var corners = [topLeft, topRight, bottomRight, bottomLeft];
 
-let layer = L.distortableVideoOverlay("https://www.mapbox.com/bites/00188/patricia_nasa.mp4", corners, {
+let layer = L.distortableVideoOverlay("examples/media/pacific-rotated.mp4", corners, {
   opacity: 0.8
 }).addTo(map);
 ```
@@ -134,6 +134,43 @@ behave identically on both majors.
 > `_animateZoom`). Those carry no compatibility guarantee across a major that has not
 > stabilised yet. TypeScript users should also note that `@types/leaflet` has no 2.x release,
 > and Leaflet 2 ships no type declarations of its own.
+
+### Generating a demo video
+
+`examples/media/pacific.mp4` and `pacific-rotated.mp4` are built from [NASA GIBS](https://nasa-gibs.github.io/gibs-api-docs/)
+satellite imagery (public domain) by `tools/make-demo-video.mjs`, which also prints the four
+corners to display it at.
+
+```sh
+npm run demo:video -- --bounds 13,-130,32,-100 --rotate 30 \
+  --layer VIIRS_SNPP_CorrectedReflectance_TrueColor \
+  --dates 2024-10-08..2024-10-15 --out examples/media/pacific-rotated.mp4
+```
+
+The point of generating rather than hotlinking is that the footprint is known exactly, so the
+coastlines in the video line up with the coastlines on the basemap instead of approximately
+matching. `--rotate` turns the imagery off north-up, which is what makes the overlay do a real
+projective placement rather than a scale-and-translate.
+
+Requires `ffmpeg` on `PATH`. Run `npm run demo:video -- --help` for all options.
+
+### Running the examples offline
+
+The examples have no network dependencies. Leaflet, `leaflet-rotate-map` and the marker icons are
+vendored under `examples/vendor/`, and both video clips are in `examples/media/`.
+
+The basemap is the one thing that cannot be self-contained — a tile layer needs a tile server. So
+each example also carries a static Blue Marble image (`media/basemap.jpg`, GIBS, public domain) in a
+pane *below* the tile layer. Online the tiles cover it completely; offline it is what you see, so
+the video still has recognisable ground to be registered against. It spans 0–45°N, 140–85°W, which
+covers the demo area; pan outside that and the background is empty.
+
+Serve the folder over HTTP rather than opening the files directly, since browsers block `file://`
+media and XHR:
+
+```sh
+python3 -m http.server 8000    # then open http://localhost:8000/examples/
+```
 
 ### Module Loaders
 The index file is built by using `rollup` into a UMD bundle, so it can be loaded with a plain
