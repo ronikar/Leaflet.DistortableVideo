@@ -110,26 +110,48 @@
             opacity: 0.8
         }).addTo(map);
 
-        [[topLeft, "topLeft"], [topRight, "topRight"], [bottomRight, "bottomRight"], [bottomLeft, "bottomLeft"]]
-            .forEach(function (pair) {
-                new L.Marker(pair[0]).addTo(map).bindPopup(pair[1]);
-            });
+        // A LatLngBounds positions the video on its own four corners, not on the
+        // corners object above, so the markers have to move with it. This mirrors
+        // what the plugin does internally in _boundsToCorners.
+        var boundsCorners = new L.LatLngBounds(mapBounds);
 
         // All three input shapes are accepted on Leaflet 2, including LatLngBounds,
-        // which reaches the plugin's own bounds handling.
+        // which reaches the plugin's own bounds handling. Each entry lists the four
+        // corners it produces, clockwise from top-left, so the markers stay on the
+        // video's actual corners whichever shape is selected.
         var shapes = {
-            corners: function () {
-                layer.setCorners({
-                    topLeft: topLeft, topRight: topRight, bottomRight: bottomRight, bottomLeft: bottomLeft
-                });
+            corners: {
+                apply: function () {
+                    layer.setCorners({
+                        topLeft: topLeft, topRight: topRight, bottomRight: bottomRight, bottomLeft: bottomLeft
+                    });
+                },
+                corners: [topLeft, topRight, bottomRight, bottomLeft]
             },
-            bounds: function () {
-                layer.setBounds(mapBounds);
+            bounds: {
+                apply: function () { layer.setBounds(mapBounds); },
+                corners: [
+                    boundsCorners.getNorthWest(), boundsCorners.getNorthEast(),
+                    boundsCorners.getSouthEast(), boundsCorners.getSouthWest()
+                ]
             },
-            points: function () {
-                layer.setCorners([topLeft, topRight, bottomRight, bottomLeft]);
+            points: {
+                apply: function () { layer.setCorners([topLeft, topRight, bottomRight, bottomLeft]); },
+                corners: [topLeft, topRight, bottomRight, bottomLeft]
             }
         };
+
+        var labels = ["topLeft", "topRight", "bottomRight", "bottomLeft"];
+        var markers = shapes.corners.corners.map(function (corner, index) {
+            return new L.Marker(corner).addTo(map).bindPopup(labels[index]);
+        });
+
+        function selectShape(name) {
+            shapes[name].apply();
+            shapes[name].corners.forEach(function (corner, index) {
+                markers[index].setLatLng(corner);
+            });
+        }
 
         var buttons = document.querySelectorAll('#shapes button');
         buttons.forEach(function (button) {
@@ -137,7 +159,7 @@
                 buttons.forEach(function (other) {
                     other.setAttribute('aria-pressed', String(other === button));
                 });
-                shapes[button.dataset.shape]();
+                selectShape(button.dataset.shape);
             });
         });
 
