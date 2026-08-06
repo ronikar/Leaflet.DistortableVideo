@@ -67,7 +67,7 @@
 
     <section id="shapes">
         <h2>Bounds input</h2>
-            <p style="margin:0 0 8px;font-size:12px;color:#5c6675">All three describe the same footprint &mdash; the video should not move.</p>
+            <p style="margin:0 0 8px;font-size:12px;color:#5c6675">Corners and point array carry footage stored 30&deg; off north-up. <code>LatLngBounds</code> is axis-aligned, so it gets the north-up clip.</p>
         <div role="group" aria-label="Choose the bounds input shape">
             <button type="button" data-shape="corners" aria-pressed="true">Corners</button>
             <button type="button" data-shape="bounds" aria-pressed="false">LatLngBounds</button>
@@ -95,67 +95,62 @@
             attribution: 'Map data &copy; <a href="https://developers.arcgis.com">ArcGis</a>'
         }).addTo(map);
 
-        var mapBounds = [[32, -130], [13, -100]];
-
-        // All three shapes below describe the same footprint - the exact ground
-        // media/pacific.mp4 covers. Switching between them should not move the
-        // video at all; that equivalence is what this page is demonstrating.
-        var topLeft = new L.LatLng(32, -130);
-        var topRight = new L.LatLng(32, -100);
-        var bottomRight = new L.LatLng(13, -100);
-        var bottomLeft = new L.LatLng(13, -130);
-
-        map.fitBounds(mapBounds);
-
-        var layer = L.distortableVideoOverlay("media/pacific.mp4", {
-            topLeft: topLeft, topRight: topRight, bottomRight: bottomRight, bottomLeft: bottomLeft
-        }, {
-            muted: true,
-            opacity: 0.8
-        }).addTo(map);
-
-        // A LatLngBounds positions the video on its own four corners, not on the
-        // corners object above, so the markers have to move with it. This mirrors
-        // what the plugin does internally in _boundsToCorners.
-        var boundsCorners = new L.LatLngBounds(mapBounds);
-
-        // All three input shapes are accepted on Leaflet 2, including LatLngBounds,
-        // which reaches the plugin's own bounds handling. Each entry lists the four
-        // corners it produces, clockwise from top-left, so the markers stay on the
-        // video's actual corners whichever shape is selected.
-        var shapes = {
+        // The rotated clip is stored 30 degrees off north-up; these are the corners
+        // of the ground it actually covers. The north-up clip covers a plain box.
+        var ROTATED = {
+            url: 'media/pacific-rotated.mp4',
             corners: {
-                apply: function () {
-                    layer.setCorners({
-                        topLeft: topLeft, topRight: topRight, bottomRight: bottomRight, bottomLeft: bottomLeft
-                    });
-                },
-                corners: [topLeft, topRight, bottomRight, bottomLeft]
+                topLeft: new L.LatLng(24.169729, -133.16373),
+                topRight: new L.LatLng(37.034354, -107.182968),
+                bottomRight: new L.LatLng(21.477765, -96.83627),
+                bottomLeft: new L.LatLng(6.98185, -122.817032)
+            }
+        };
+        var NORTH_UP = { url: 'media/pacific.mp4', bounds: [[32, -130], [13, -100]] };
+
+        map.fitBounds([[6.9, -133.2], [37.1, -96.8]]);
+
+        var labels = ["topLeft", "topRight", "bottomRight", "bottomLeft"];
+        var markers = labels.map(function (label) {
+            return new L.Marker(ROTATED.corners[label]).addTo(map).bindPopup(label);
+        });
+
+        // A LatLngBounds is axis-aligned by definition, so it cannot describe the
+        // rotated clip's footprint - that shape gets the north-up clip instead, and
+        // each shape is shown on footage it can actually register. Swapping the clip
+        // means rebuilding the layer, which is a couple of lines and keeps every
+        // mode honest rather than leaving one of them misplaced.
+        var layer = null;
+        var VIDEO_OPTIONS = { muted: true, autoplay: true, loop: true, opacity: 0.85 };
+
+        var shapes = {
+            corners: function () {
+                layer = L.distortableVideoOverlay(ROTATED.url, ROTATED.corners, VIDEO_OPTIONS);
+                return labels.map(function (l) { return ROTATED.corners[l]; });
             },
-            bounds: {
-                apply: function () { layer.setBounds(mapBounds); },
-                corners: [
-                    boundsCorners.getNorthWest(), boundsCorners.getNorthEast(),
-                    boundsCorners.getSouthEast(), boundsCorners.getSouthWest()
-                ]
+            bounds: function () {
+                // setBounds() is the call that used to throw on Leaflet 2, because it
+                // reaches L.latLngBounds() - the one factory the plugin depended on.
+                layer = L.distortableVideoOverlay(NORTH_UP.url, ROTATED.corners, VIDEO_OPTIONS);
+                layer.setBounds(NORTH_UP.bounds);
+                var box = new L.LatLngBounds(NORTH_UP.bounds);
+                return [box.getNorthWest(), box.getNorthEast(), box.getSouthEast(), box.getSouthWest()];
             },
-            points: {
-                apply: function () { layer.setCorners([topLeft, topRight, bottomRight, bottomLeft]); },
-                corners: [topLeft, topRight, bottomRight, bottomLeft]
+            points: function () {
+                var clockwise = labels.map(function (l) { return ROTATED.corners[l]; });
+                layer = L.distortableVideoOverlay(ROTATED.url, clockwise, VIDEO_OPTIONS);
+                return clockwise;
             }
         };
 
-        var labels = ["topLeft", "topRight", "bottomRight", "bottomLeft"];
-        var markers = shapes.corners.corners.map(function (corner, index) {
-            return new L.Marker(corner).addTo(map).bindPopup(labels[index]);
-        });
-
         function selectShape(name) {
-            shapes[name].apply();
-            shapes[name].corners.forEach(function (corner, index) {
-                markers[index].setLatLng(corner);
-            });
+            if (layer) { layer.remove(); }
+            var corners = shapes[name]();
+            layer.addTo(map);
+            corners.forEach(function (corner, index) { markers[index].setLatLng(corner); });
         }
+
+        selectShape('corners');
 
         var buttons = document.querySelectorAll('#shapes button');
         buttons.forEach(function (button) {
