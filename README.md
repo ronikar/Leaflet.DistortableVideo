@@ -6,11 +6,11 @@ Enable to distort videos on Leaflet maps. Leaflet.DistortableVideo allows for pe
 
 | Example | Leaflet | Shows |
 | --- | --- | --- |
-| [`corners.html`](examples/corners.html) | 1.9.4 | Footage stored 30° off north-up, registered by four named corners |
-| [`bounds.html`](examples/bounds.html) | 1.9.4 | North-up footage, `LatLngBounds` input, axis-aligned |
-| [`pointArray.html`](examples/pointArray.html) | 1.9.4 | The same rotated footage, corners as a clockwise array |
-| [`rotate.html`](examples/rotate.html) | 1.9.4 | Rotated footage on a rotated map via `leaflet-rotate-map` |
-| [`leaflet2.html`](examples/leaflet2.html) | 2.0.0-alpha.1 | Side by side against stock `L.VideoOverlay` |
+| [`corners.html`](https://ronikar.github.io/Leaflet.DistortableVideo/examples/corners.html) | 1.9.4 | Footage stored 30° off north-up, registered by four named corners |
+| [`bounds.html`](https://ronikar.github.io/Leaflet.DistortableVideo/examples/bounds.html) | 1.9.4 | North-up footage, `LatLngBounds` input, axis-aligned |
+| [`pointArray.html`](https://ronikar.github.io/Leaflet.DistortableVideo/examples/pointArray.html) | 1.9.4 | The same rotated footage, corners as a clockwise array |
+| [`rotate.html`](https://ronikar.github.io/Leaflet.DistortableVideo/examples/rotate.html) | 1.9.4 | Rotated footage on a rotated map via `leaflet-rotate-map` |
+| [`leaflet2.html`](https://ronikar.github.io/Leaflet.DistortableVideo/examples/leaflet2.html) | 2.0.0-alpha.1 | Side by side against stock `L.VideoOverlay` |
 
 ## Requirements
 ### Dependancies
@@ -25,18 +25,51 @@ Your browser must support the next features
 
 ### Setup
 
-* Add script to html. You can use `index.js` or `index.min.js` in `./dist` folder. 
-```html
-<script src="distortableVideoOverlay.js"></script>
+```sh
+npm install leaflet-distortable-video
 ```
 
-* You can also use `npm install leaflet-distortable-video` or `yarn add leaflet-distortable-video`.
+The plugin gives you a factory and the class it constructs, following Leaflet's own convention:
 
-### L.distortableVideo(videoUrl, corners, options)
+| | | |
+| --- | --- | --- |
+| `distortableVideoOverlay(video, corners, options)` | factory | returns a new overlay |
+| `DistortableVideoOverlay` | class | use with `new`, extends `L.VideoOverlay` |
 
-To instantiate a `L.DistortableVideo`, specify the video URL or videoElement, four corner
-points, and any `L.VideoOverlay` options in the `L.distortableVideo` factory
-method, for example:
+Both are named exports, and both are also registered on `L`.
+
+Import them by name — this works under every bundler and in Node:
+
+```js
+import L from 'leaflet';
+import { distortableVideoOverlay, DistortableVideoOverlay } from 'leaflet-distortable-video';
+
+distortableVideoOverlay(videoUrl, corners, { opacity: 0.8 }).addTo(map);
+new DistortableVideoOverlay(videoUrl, corners, { opacity: 0.8 }).addTo(map);
+```
+
+> There is also a default export, but do not rely on it. The package is UMD, so under native Node
+> ESM the default resolves to `module.exports` — an object, not the factory — and calling it throws.
+> Bundlers unwrap it, Node does not. Use the named imports.
+
+With a `<script>` tag, load Leaflet first and the plugin registers itself on `L`:
+
+```html
+<script src="leaflet.js"></script>
+<script src="node_modules/leaflet-distortable-video/dist/index.min.js"></script>
+<script>
+  L.distortableVideoOverlay(videoUrl, corners, { opacity: 0.8 }).addTo(map);
+  new L.DistortableVideoOverlay(videoUrl, corners, { opacity: 0.8 }).addTo(map);
+</script>
+```
+
+> `L.distortableVideoOverlay` and `L.DistortableVideoOverlay` are unavailable when Leaflet resolves
+> as an ES module — use the package's exports instead.
+
+### distortableVideoOverlay(videoUrl, corners, options)
+
+Specify the video URL or videoElement, four corner points, and any `L.VideoOverlay` options,
+for example:
 
 ```js
 var corners= {
@@ -106,7 +139,7 @@ map.setBearing(45);
 ### Leaflet 2
 
 The same build works on Leaflet 1 and Leaflet 2 — there is no separate entry point and no
-version switch. See [`examples/leaflet2.html`](examples/leaflet2.html).
+version switch. See [`examples/leaflet2.html`](https://ronikar.github.io/Leaflet.DistortableVideo/examples/leaflet2.html).
 
 Two things change on the **calling** side, not in this plugin:
 

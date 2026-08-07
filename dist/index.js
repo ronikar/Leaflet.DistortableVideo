@@ -162,6 +162,14 @@
             return this;
         },
 
+        // The inherited event map has no resize, so a map that starts hidden or
+        // zero-sized never recomputes and the video keeps no transform at all.
+        getEvents: function () {
+            const events = L.VideoOverlay.prototype.getEvents.call(this);
+            events.resize = this._reset;
+            return events;
+        },
+
         _initImage: function () {
             L.VideoOverlay.prototype._initImage.call(this);
 
@@ -295,10 +303,16 @@
         return new DistortableVideoOverlay(url, corners, options);
     }
 
-    L.DistortableVideoOverlay = DistortableVideoOverlay;
-    L.distortableVideoOverlay = distortableVideoOverlay;
+    // Kept for <script> tag usage. Guarded because Node's require(ESM) hands over a
+    // frozen namespace, where the bare assignment threw.
+    if (L && Object.isExtensible(L)) {
+        L.DistortableVideoOverlay = DistortableVideoOverlay;
+        L.distortableVideoOverlay = distortableVideoOverlay;
+    }
 
+    exports.DistortableVideoOverlay = DistortableVideoOverlay;
     exports.default = distortableVideoOverlay;
+    exports.distortableVideoOverlay = distortableVideoOverlay;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
