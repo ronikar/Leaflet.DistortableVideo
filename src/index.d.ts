@@ -1,20 +1,34 @@
 import * as L from 'leaflet';
 
-declare module "leaflet" {
-    interface GeographicalCorners {
-        topLeft: L.LatLng,
-        topRight: L.LatLng,
-        bottomRight: L.LatLng,
-        bottomLeft: L.LatLng
-    }
+export interface GeographicalCorners {
+    topLeft: L.LatLng;
+    topRight: L.LatLng;
+    bottomRight: L.LatLng;
+    bottomLeft: L.LatLng;
+}
 
-    type ClosewiseCorners = [L.LatLng, L.LatLng, L.LatLng, L.LatLng];
+/** Four corners clockwise from top-left. */
+export type ClockwiseCorners = [L.LatLng, L.LatLng, L.LatLng, L.LatLng];
 
-    class DistortableVideoOverlay extends VideoOverlay {
-        constructor(video: string | string[] | HTMLVideoElement, bounds: GeographicalCorners | ClosewiseCorners | LatLngBoundsExpression, options?: VideoOverlayOptions);
-        setBounds(bounds: LatLngBoundsExpression): this;
-        setCorners(corners: GeographicalCorners | ClosewiseCorners): this;
-    }
+type Video = string | string[] | HTMLVideoElement;
+type Bounds = GeographicalCorners | ClockwiseCorners | L.LatLngBoundsExpression;
 
-    function distortableVideoOverlay(video: string | string[] | HTMLVideoElement, bounds: GeographicalCorners | ClosewiseCorners | LatLngBoundsExpression, options?: VideoOverlayOptions): DistortableVideoOverlay;
+export class DistortableVideoOverlay extends L.VideoOverlay {
+    constructor(video: Video, bounds: Bounds, options?: L.VideoOverlayOptions);
+    setBounds(bounds: L.LatLngBoundsExpression): this;
+    setCorners(corners: GeographicalCorners | ClockwiseCorners): this;
+}
+
+export function distortableVideoOverlay(
+    video: Video, bounds: Bounds, options?: L.VideoOverlayOptions
+): DistortableVideoOverlay;
+
+export default distortableVideoOverlay;
+
+// Also registered on L for <script> tag usage, but not when Leaflet resolves as
+// an ES module - prefer the exports above under a bundler.
+declare module 'leaflet' {
+    function distortableVideoOverlay(
+        video: Video, bounds: Bounds, options?: L.VideoOverlayOptions
+    ): DistortableVideoOverlay;
 }
