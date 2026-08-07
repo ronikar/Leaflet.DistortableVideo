@@ -24,6 +24,17 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
         return this;
     },
 
+    // The inherited event map binds only zoom, viewreset and zoomanim. Without
+    // resize, a map whose container starts hidden or zero-sized never recovers:
+    // the first _reset bails on a 0x0 viewport and nothing ever recomputes, so
+    // the video keeps no transform and no size at all. That is the ordinary
+    // tab / modal / accordion case, not an exotic one.
+    getEvents: function () {
+        const events = L.VideoOverlay.prototype.getEvents.call(this);
+        events.resize = this._reset;
+        return events;
+    },
+
     _initImage: function () {
         L.VideoOverlay.prototype._initImage.call(this);
 
@@ -157,5 +168,17 @@ export default function distortableVideoOverlay(url, corners, options) {
     return new DistortableVideoOverlay(url, corners, options);
 }
 
-L.DistortableVideoOverlay = DistortableVideoOverlay;
-L.distortableVideoOverlay = distortableVideoOverlay;
+// Named exports are the reliable way to reach this from a bundler. Patching the
+// L namespace below only works when L is a mutable object, which it is for a
+// <script> tag and for Leaflet 1 through a bundler, but not when Leaflet is
+// resolved as a real ES module - a module namespace is frozen, so the
+// assignment either lands on an unreachable interop copy or throws outright.
+export { DistortableVideoOverlay, distortableVideoOverlay };
+
+// Registering on L is what the <script> tag usage depends on, so keep it - but
+// only where the namespace accepts writes. Node's require(ESM) interop hands
+// over the genuine frozen namespace, where this threw a TypeError on import.
+if (L && Object.isExtensible(L)) {
+    L.DistortableVideoOverlay = DistortableVideoOverlay;
+    L.distortableVideoOverlay = distortableVideoOverlay;
+}

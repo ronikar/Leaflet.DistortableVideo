@@ -1,12 +1,14 @@
 {
   "name": "leaflet-distortable-video",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Enable to distort videos on Leaflet maps.",
   "main": "dist/index.js",
+  "types": "src/index.d.ts",
   "files": [
     "dist",
     "src",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "rollup -c",
@@ -29,14 +31,12 @@
     "url": "https://github.com/ronikar/Leaflet.DistortableVideo/issues"
   },
   "homepage": "https://github.com/ronikar/Leaflet.DistortableVideo#readme",
-  "dependencies": {
-    "@types/leaflet": "^1.5.21"
-  },
   "peerDependencies": {
     "leaflet": "^1.0.0 || ^2.0.0-alpha"
   },
   "devDependencies": {
-    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-terser": "^1.0.0",
+    "@types/leaflet": "^1.9.22",
     "rollup": "^4.53.3"
   }
 }

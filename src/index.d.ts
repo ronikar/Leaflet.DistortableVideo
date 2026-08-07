@@ -1,20 +1,50 @@
 import * as L from 'leaflet';
 
-declare module "leaflet" {
-    interface GeographicalCorners {
-        topLeft: L.LatLng,
-        topRight: L.LatLng,
-        bottomRight: L.LatLng,
-        bottomLeft: L.LatLng
+export interface GeographicalCorners {
+    topLeft: L.LatLng;
+    topRight: L.LatLng;
+    bottomRight: L.LatLng;
+    bottomLeft: L.LatLng;
+}
+
+/** Four corners clockwise from top-left. */
+export type ClockwiseCorners = [L.LatLng, L.LatLng, L.LatLng, L.LatLng];
+
+export type DistortableVideoBounds =
+    | GeographicalCorners
+    | ClockwiseCorners
+    | L.LatLngBoundsExpression;
+
+export type VideoSource = string | string[] | HTMLVideoElement;
+
+export class DistortableVideoOverlay extends L.VideoOverlay {
+    constructor(video: VideoSource, bounds: DistortableVideoBounds, options?: L.VideoOverlayOptions);
+    setBounds(bounds: L.LatLngBoundsExpression): this;
+    setCorners(corners: GeographicalCorners | ClockwiseCorners): this;
+}
+
+export function distortableVideoOverlay(
+    video: VideoSource,
+    bounds: DistortableVideoBounds,
+    options?: L.VideoOverlayOptions
+): DistortableVideoOverlay;
+
+export default distortableVideoOverlay;
+
+// The plugin also registers itself on the L namespace, which is how the
+// <script> tag usage works. That registration is skipped when L is a frozen ES
+// module namespace, so under a bundler prefer the exports above.
+declare module 'leaflet' {
+    // eslint-disable-next-line @typescript-eslint/no-empty-interface
+    interface DistortableVideoOverlayStatic {
+        new(video: VideoSource, bounds: DistortableVideoBounds, options?: L.VideoOverlayOptions): DistortableVideoOverlay;
     }
 
-    type ClosewiseCorners = [L.LatLng, L.LatLng, L.LatLng, L.LatLng];
+    let DistortableVideoOverlay: DistortableVideoOverlayStatic | undefined;
 
-    class DistortableVideoOverlay extends VideoOverlay {
-        constructor(video: string | string[] | HTMLVideoElement, bounds: GeographicalCorners | ClosewiseCorners | LatLngBoundsExpression, options?: VideoOverlayOptions);
-        setBounds(bounds: LatLngBoundsExpression): this;
-        setCorners(corners: GeographicalCorners | ClosewiseCorners): this;
-    }
-
-    function distortableVideoOverlay(video: string | string[] | HTMLVideoElement, bounds: GeographicalCorners | ClosewiseCorners | LatLngBoundsExpression, options?: VideoOverlayOptions): DistortableVideoOverlay;
+    function distortableVideoOverlay(
+        video: VideoSource,
+        bounds: DistortableVideoBounds,
+        options?: L.VideoOverlayOptions
+    ): DistortableVideoOverlay;
 }
