@@ -10,41 +10,25 @@ export interface GeographicalCorners {
 /** Four corners clockwise from top-left. */
 export type ClockwiseCorners = [L.LatLng, L.LatLng, L.LatLng, L.LatLng];
 
-export type DistortableVideoBounds =
-    | GeographicalCorners
-    | ClockwiseCorners
-    | L.LatLngBoundsExpression;
-
-export type VideoSource = string | string[] | HTMLVideoElement;
+type Video = string | string[] | HTMLVideoElement;
+type Bounds = GeographicalCorners | ClockwiseCorners | L.LatLngBoundsExpression;
 
 export class DistortableVideoOverlay extends L.VideoOverlay {
-    constructor(video: VideoSource, bounds: DistortableVideoBounds, options?: L.VideoOverlayOptions);
+    constructor(video: Video, bounds: Bounds, options?: L.VideoOverlayOptions);
     setBounds(bounds: L.LatLngBoundsExpression): this;
     setCorners(corners: GeographicalCorners | ClockwiseCorners): this;
 }
 
 export function distortableVideoOverlay(
-    video: VideoSource,
-    bounds: DistortableVideoBounds,
-    options?: L.VideoOverlayOptions
+    video: Video, bounds: Bounds, options?: L.VideoOverlayOptions
 ): DistortableVideoOverlay;
 
 export default distortableVideoOverlay;
 
-// The plugin also registers itself on the L namespace, which is how the
-// <script> tag usage works. That registration is skipped when L is a frozen ES
-// module namespace, so under a bundler prefer the exports above.
+// Also registered on L for <script> tag usage, but not when Leaflet resolves as
+// an ES module - prefer the exports above under a bundler.
 declare module 'leaflet' {
-    // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    interface DistortableVideoOverlayStatic {
-        new(video: VideoSource, bounds: DistortableVideoBounds, options?: L.VideoOverlayOptions): DistortableVideoOverlay;
-    }
-
-    let DistortableVideoOverlay: DistortableVideoOverlayStatic | undefined;
-
     function distortableVideoOverlay(
-        video: VideoSource,
-        bounds: DistortableVideoBounds,
-        options?: L.VideoOverlayOptions
+        video: Video, bounds: Bounds, options?: L.VideoOverlayOptions
     ): DistortableVideoOverlay;
 }

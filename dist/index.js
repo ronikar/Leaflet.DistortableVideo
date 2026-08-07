@@ -162,11 +162,8 @@
             return this;
         },
 
-        // The inherited event map binds only zoom, viewreset and zoomanim. Without
-        // resize, a map whose container starts hidden or zero-sized never recovers:
-        // the first _reset bails on a 0x0 viewport and nothing ever recomputes, so
-        // the video keeps no transform and no size at all. That is the ordinary
-        // tab / modal / accordion case, not an exotic one.
+        // The inherited event map has no resize, so a map that starts hidden or
+        // zero-sized never recomputes and the video keeps no transform at all.
         getEvents: function () {
             const events = L.VideoOverlay.prototype.getEvents.call(this);
             events.resize = this._reset;
@@ -306,9 +303,8 @@
         return new DistortableVideoOverlay(url, corners, options);
     }
 
-    // Registering on L is what the <script> tag usage depends on, so keep it - but
-    // only where the namespace accepts writes. Node's require(ESM) interop hands
-    // over the genuine frozen namespace, where this threw a TypeError on import.
+    // Kept for <script> tag usage. Guarded because Node's require(ESM) hands over a
+    // frozen namespace, where the bare assignment threw.
     if (L && Object.isExtensible(L)) {
         L.DistortableVideoOverlay = DistortableVideoOverlay;
         L.distortableVideoOverlay = distortableVideoOverlay;

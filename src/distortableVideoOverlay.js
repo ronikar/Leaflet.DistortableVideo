@@ -24,11 +24,8 @@ const DistortableVideoOverlay = L.VideoOverlay.extend({
         return this;
     },
 
-    // The inherited event map binds only zoom, viewreset and zoomanim. Without
-    // resize, a map whose container starts hidden or zero-sized never recovers:
-    // the first _reset bails on a 0x0 viewport and nothing ever recomputes, so
-    // the video keeps no transform and no size at all. That is the ordinary
-    // tab / modal / accordion case, not an exotic one.
+    // The inherited event map has no resize, so a map that starts hidden or
+    // zero-sized never recomputes and the video keeps no transform at all.
     getEvents: function () {
         const events = L.VideoOverlay.prototype.getEvents.call(this);
         events.resize = this._reset;
@@ -168,16 +165,12 @@ export default function distortableVideoOverlay(url, corners, options) {
     return new DistortableVideoOverlay(url, corners, options);
 }
 
-// Named exports are the reliable way to reach this from a bundler. Patching the
-// L namespace below only works when L is a mutable object, which it is for a
-// <script> tag and for Leaflet 1 through a bundler, but not when Leaflet is
-// resolved as a real ES module - a module namespace is frozen, so the
-// assignment either lands on an unreachable interop copy or throws outright.
+// The reliable path from a bundler: the L registration below only lands when L
+// is mutable, which a frozen ES module namespace is not.
 export { DistortableVideoOverlay, distortableVideoOverlay };
 
-// Registering on L is what the <script> tag usage depends on, so keep it - but
-// only where the namespace accepts writes. Node's require(ESM) interop hands
-// over the genuine frozen namespace, where this threw a TypeError on import.
+// Kept for <script> tag usage. Guarded because Node's require(ESM) hands over a
+// frozen namespace, where the bare assignment threw.
 if (L && Object.isExtensible(L)) {
     L.DistortableVideoOverlay = DistortableVideoOverlay;
     L.distortableVideoOverlay = distortableVideoOverlay;

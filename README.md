@@ -29,8 +29,7 @@ Your browser must support the next features
 npm install leaflet-distortable-video
 ```
 
-With a bundler, import the factory from the package. This is the form that works on both Leaflet
-majors and in every bundler:
+With a bundler, import the factory from the package:
 
 ```js
 import L from 'leaflet';
@@ -39,9 +38,9 @@ import distortableVideoOverlay from 'leaflet-distortable-video';
 distortableVideoOverlay(videoUrl, corners, { opacity: 0.8 }).addTo(map);
 ```
 
-The named exports `distortableVideoOverlay` and `DistortableVideoOverlay` are also available.
+`distortableVideoOverlay` and `DistortableVideoOverlay` are also named exports.
 
-With a plain `<script>` tag, load Leaflet first and the plugin registers itself on `L`:
+With a `<script>` tag, load Leaflet first and the plugin registers itself on `L`:
 
 ```html
 <script src="leaflet.js"></script>
@@ -51,9 +50,8 @@ With a plain `<script>` tag, load Leaflet first and the plugin registers itself 
 </script>
 ```
 
-> `L.distortableVideoOverlay` is only reachable when `L` is a mutable object — a `<script>` tag, or
-> Leaflet 1 through a bundler. When Leaflet resolves as a real ES module its namespace is frozen,
-> so use the package's own exports instead.
+> `L.distortableVideoOverlay` is unavailable when Leaflet resolves as an ES module — use the
+> package's exports instead.
 
 ### distortableVideoOverlay(videoUrl, corners, options)
 
