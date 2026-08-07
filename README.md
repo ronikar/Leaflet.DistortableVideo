@@ -38,17 +38,19 @@ The plugin gives you a factory and the class it constructs, following Leaflet's 
 
 Both are named exports, and both are also registered on `L`.
 
-With a bundler, import them from the package:
+Import them by name — this works under every bundler and in Node:
 
 ```js
 import L from 'leaflet';
-import distortableVideoOverlay, { DistortableVideoOverlay } from 'leaflet-distortable-video';
+import { distortableVideoOverlay, DistortableVideoOverlay } from 'leaflet-distortable-video';
 
 distortableVideoOverlay(videoUrl, corners, { opacity: 0.8 }).addTo(map);
 new DistortableVideoOverlay(videoUrl, corners, { opacity: 0.8 }).addTo(map);
 ```
 
-The factory is also the default export.
+> There is also a default export, but do not rely on it. The package is UMD, so under native Node
+> ESM the default resolves to `module.exports` — an object, not the factory — and calling it throws.
+> Bundlers unwrap it, Node does not. Use the named imports.
 
 With a `<script>` tag, load Leaflet first and the plugin registers itself on `L`:
 
