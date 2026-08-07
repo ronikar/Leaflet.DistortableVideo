@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Leaflet 2 &mdash; Leaflet.DistortableVideo</title>
+    <link rel="stylesheet" href="vendor/leaflet2.css" />
+    <style>
+        html, body { height: 100%; margin: 0; }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+            color: #1e2530;
+        }
+
+        .pane { position: relative; flex: 1 1 50%; min-height: 0; border-top: 1px solid #c6ccd6; }
+        .pane:first-of-type { border-top: 0; }
+        .pane .map { position: absolute; inset: 0; }
+
+        /* Caption strip naming what each half is doing. */
+        .caption {
+            position: absolute;
+            z-index: 1000;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 9px 14px;
+            background: rgba(255, 255, 255, 0.94);
+            border-top: 1px solid #d6dbe2;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .caption b { font-size: 13.5px; }
+        .caption span { color: #5c6675; }
+
+        .verdict {
+            font: 600 10.5px/1 ui-monospace, Menlo, monospace;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+
+        .verdict.good { background: #dcefe3; color: #26694a; }
+        .verdict.bad { background: #f6dedb; color: #94322a; }
+
+        #shapes {
+            position: absolute;
+            z-index: 1000;
+            top: 14px;
+            right: 14px;
+            padding: 11px 13px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        #shapes h2 {
+            margin: 0 0 7px;
+            font-size: 10.5px;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: #5c6675;
+        }
+
+        #shapes div { display: flex; gap: 6px; }
+
+        #shapes button {
+            font: 600 12.5px/1 system-ui, -apple-system, sans-serif;
+            padding: 7px 11px;
+            border: 1px solid #c6ccd6;
+            border-radius: 5px;
+            background: #fff;
+            color: #1e2530;
+            cursor: pointer;
+        }
+
+        #shapes button[aria-pressed="true"] { background: #1667c4; border-color: #1667c4; color: #fff; }
+        #shapes button:focus-visible { outline: 2px solid #1667c4; outline-offset: 2px; }
+
+        #version { margin: 9px 0 0; font-size: 11.5px; color: #5c6675; }
+
+        #back {
+            position: absolute;
+            z-index: 1001;
+            top: 14px;
+            left: 60px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+            color: #1e2530;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        /* The caption bar occupies the bottom edge, so move Leaflet's attribution
+           above it rather than letting the two overlap. */
+        .leaflet-control-attribution { margin-bottom: 34px !important; }
+
+        #back:hover { background: #fff; }
+        #back:focus-visible { outline: 2px solid #1667c4; outline-offset: 2px; }
+    </style>
+</head>
+
+<body>
+    <a id="back" href="./">&larr; All examples</a>
+
+    <section class="pane" aria-label="With Leaflet.DistortableVideo">
+        <div class="map" id="withPlugin"></div>
+
+        <section id="shapes">
+            <h2>Corners input</h2>
+            <div role="group" aria-label="Choose how the corners are given">
+                <button type="button" data-shape="corners" aria-pressed="true">Corners</button>
+                <button type="button" data-shape="points" aria-pressed="false">Point array</button>
+            </div>
+            <p id="version"></p>
+        </section>
+
+        <div class="caption">
+            <span class="verdict good">registered</span>
+            <b>With Leaflet.DistortableVideo</b>
+            <span>Four corners, so the footage is rotated back onto the ground it covers &mdash; the coastlines
+                continue into the basemap.</span>
+        </div>
+    </section>
+
+    <section class="pane" aria-label="With stock Leaflet VideoOverlay">
+        <div class="map" id="stockLeaflet"></div>
+        <div class="caption">
+            <span class="verdict bad">misplaced</span>
+            <b>Stock <code>L.VideoOverlay</code></b>
+            <span>The same clip, same Leaflet. A <code>LatLngBounds</code> is all it accepts, so the footage can
+                only be dropped into an upright box &mdash; its coastlines end up 30&deg; off the land underneath.</span>
+        </div>
+    </section>
+
+    <!-- Leaflet 2's default entry point is an ES module. `leaflet-global.js` is the
+         build that still exposes the global `L`, which is what a plain <script>
+         page and this plugin's UMD bundle both expect. -->
+    <script src="vendor/leaflet2-global.js"></script>
+    <script src="../dist/index.js"></script>
+    <script>
+        // Leaflet 2 replaced the lowercase factories with constructors:
+        //   L.map(...)       ->  new L.Map(...)
+        //   L.latLng(...)    ->  new L.LatLng(...)
+        //   L.tileLayer(...) ->  new L.TileLayer(...)
+        var TILES = 'https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+        var VIEW = [[6.9, -133.2], [37.1, -96.8]];
+        var VIDEO_OPTIONS = { muted: true, autoplay: true, loop: true, opacity: 0.85 };
+
+        // The rotated clip is stored 30 degrees off north-up; these are the corners
+        // of the ground it actually covers. The north-up clip covers a plain box.
+        var ROTATED = {
+            url: 'media/pacific-rotated.mp4',
+            corners: {
+                topLeft: new L.LatLng(24.169729, -133.16373),
+                topRight: new L.LatLng(37.034354, -107.182968),
+                bottomRight: new L.LatLng(21.477765, -96.83627),
+                bottomLeft: new L.LatLng(6.98185, -122.817032)
+            }
+        };
+
+        function buildMap(id) {
+            var map = new L.Map(id);
+
+            // Offline fallback: a static basemap in a pane below the tiles. When the
+            // tile layer loads it covers this completely; with no network it is what
+            // you see, so the video still has recognisable ground to be registered
+            // against. media/basemap.jpg is GIBS Blue Marble, requested in EPSG:3857
+            // so an image overlay places it without latitude distortion.
+            map.createPane('fallback');
+            map.getPane('fallback').style.zIndex = 150;
+            new L.ImageOverlay('media/basemap.jpg', [[0, -140], [45, -85]], { pane: 'fallback' }).addTo(map);
+
+            new L.TileLayer(TILES, { maxZoom: 18, attribution: 'Map data &copy; ArcGis' }).addTo(map);
+            map.fitBounds(VIEW);
+            return map;
+        }
+
+        var pluginMap = buildMap('withPlugin');
+        var stockMap = buildMap('stockLeaflet');
+
+        // ── Top: the plugin ──────────────────────────────────────────────────
+        var labels = ["topLeft", "topRight", "bottomRight", "bottomLeft"];
+        var markers = labels.map(function (label) {
+            return new L.Marker(ROTATED.corners[label]).addTo(pluginMap).bindPopup(label);
+        });
+
+        // Both shapes describe the same footprint with the same clip, so switching
+        // re-corners the existing layer rather than rebuilding it - and the video
+        // should not move at all.
+        var layer = L.distortableVideoOverlay(ROTATED.url, ROTATED.corners, VIDEO_OPTIONS).addTo(pluginMap);
+
+        var shapes = {
+            corners: function () { layer.setCorners(ROTATED.corners); },
+            points: function () {
+                layer.setCorners(labels.map(function (l) { return ROTATED.corners[l]; }));
+            }
+        };
+
+        function selectShape(name) {
+            shapes[name]();
+        }
+
+        selectShape('corners');
+
+        var buttons = document.querySelectorAll('#shapes button');
+        buttons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                buttons.forEach(function (other) {
+                    other.setAttribute('aria-pressed', String(other === button));
+                });
+                selectShape(button.dataset.shape);
+            });
+        });
+
+        // ── Bottom: what Leaflet alone can do with the same clip ─────────────
+        //
+        // L.VideoOverlay takes a LatLngBounds and nothing else, so the best it can
+        // be given is the bounding box of the rotated footprint. The footage is
+        // then stretched upright into that box: the coastlines sit at the wrong
+        // angle and run off the edges of the land underneath.
+        var footprint = new L.LatLngBounds([
+            ROTATED.corners.topLeft, ROTATED.corners.topRight,
+            ROTATED.corners.bottomRight, ROTATED.corners.bottomLeft
+        ]);
+        new L.VideoOverlay(ROTATED.url, footprint, VIDEO_OPTIONS).addTo(stockMap);
+
+        new L.Rectangle(footprint, {
+            color: '#94322a', weight: 1.5, dashArray: '5 4', fill: false, interactive: false
+        }).addTo(stockMap);
+
+        // Keep both halves showing the same place so the comparison is fair.
+        var syncing = false;
+        function sync(from, to) {
+            from.on('move zoom', function () {
+                if (syncing) return;
+                syncing = true;
+                to.setView(from.getCenter(), from.getZoom(), { animate: false });
+                syncing = false;
+            });
+        }
+        sync(pluginMap, stockMap);
+        sync(stockMap, pluginMap);
+
+        document.getElementById('version').textContent = 'Running Leaflet ' + L.version;
+    </script>
+</body>
+
+</html>

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Point array &mdash; Leaflet.DistortableVideo</title>
+    <title>Corners object &mdash; Leaflet.DistortableVideo</title>
     <link rel="stylesheet" href="vendor/leaflet.css"/>
     <link rel="stylesheet" type="text/css" href="main.css">
 </head>
@@ -42,7 +42,7 @@
         var topRight = L.latLng([37.034354, -107.182968]);
         var bottomRight = L.latLng([21.477765, -96.83627]);
         var bottomLeft = L.latLng([6.98185, -122.817032]);
-        var corners = [topLeft, topRight, bottomRight, bottomLeft];
+        var corners = { topLeft, topRight, bottomRight, bottomLeft };
 
         map.fitBounds(mapBounds);
 

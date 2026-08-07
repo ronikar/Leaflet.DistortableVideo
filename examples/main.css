@@ -16,3 +16,26 @@ html {
     z-index: 0 !important;
     pointer-events: all;
 }
+/* Back-link shown on each demo, above the map. */
+#back {
+	position: absolute;
+	z-index: 1000;
+	top: 20px;
+	left: 60px;
+	padding: 6px 12px;
+	border-radius: 6px;
+	background: rgba(255, 255, 255, 0.94);
+	box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+	color: #1e2530;
+	font: 600 13px/1 system-ui, -apple-system, sans-serif;
+	text-decoration: none;
+}
+
+#back:hover {
+	background: #fff;
+}
+
+#back:focus-visible {
+	outline: 2px solid #1667c4;
+	outline-offset: 2px;
+}
