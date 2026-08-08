@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <title>overlay fixture</title>
-    <link rel="stylesheet" href="/examples/vendor/leaflet.css">
     <style>
         html, body { margin: 0; }
         /* Fixed size so the geometry assertions are deterministic. */
@@ -17,38 +16,52 @@
 <body>
     <div id="wrap"><div id="map"></div></div>
 
-    <script src="/examples/vendor/leaflet.js"></script>
+    <script>
+        // ?leaflet=2 loads the Leaflet 2 build instead of Leaflet 1. document.write
+        // is deliberate: it keeps the parser blocked, so the plugin's own <script>
+        // below still runs after Leaflet is on the page, which the UMD needs.
+        var params = new URLSearchParams(location.search);
+        var v2 = params.get('leaflet') === '2';
+        var base = '/examples/vendor/' + (v2 ? 'leaflet2' : 'leaflet');
+
+        document.write('<link rel="stylesheet" href="' + base + '.css">');
+        document.write('<scr' + 'ipt src="' + base + (v2 ? '-global' : '') + '.js"></scr' + 'ipt>');
+    </script>
     <script src="/dist/index.js"></script>
     <script>
         // ?hidden=1 builds the map while its container is display:none, which is
         // the tab / modal / accordion case. ?shape=corners|bounds|degenerate picks
         // the solver branch: a general quad, an axis-aligned box, or a collapsed
         // quad with no projective transform.
-        var params = new URLSearchParams(location.search);
+        //
+        // Only constructor forms are used below. Leaflet 2 dropped the lowercase
+        // factories (L.map, L.latLng, ...), and `new` works on both majors.
         if (params.get('hidden') === '1') document.getElementById('wrap').className = 'hidden';
 
+        var latLng = function (lat, lng) { return new L.LatLng(lat, lng); };
+
         var CORNERS = {
-            topLeft: L.latLng(30.6, -129),
-            topRight: L.latLng(32, -100),
-            bottomRight: L.latLng(13, -97),
-            bottomLeft: L.latLng(13, -130)
+            topLeft: latLng(30.6, -129),
+            topRight: latLng(32, -100),
+            bottomRight: latLng(13, -97),
+            bottomLeft: latLng(13, -130)
         };
         var BOUNDS = [[32, -130], [13, -100]];
-        var VIEW = [[6.9, -133.2], [37.1, -96.8]];
+        var VIEW = new L.LatLngBounds([latLng(6.9, -133.2), latLng(37.1, -96.8)]);
 
         // All four distinct, but topRight/bottomRight/bottomLeft share a parallel,
         // so the quad has no projective transform. areSomeCornersEqual misses this.
         var DEGENERATE = {
-            topLeft: L.latLng(30, -129),
-            topRight: L.latLng(20, -120),
-            bottomRight: L.latLng(20, -110),
-            bottomLeft: L.latLng(20, -100)
+            topLeft: latLng(30, -129),
+            topRight: latLng(20, -120),
+            bottomRight: latLng(20, -110),
+            bottomLeft: latLng(20, -100)
         };
 
         window.__errors = [];
         window.addEventListener('error', function (e) { window.__errors.push(String(e.message)); });
 
-        var map = L.map('map', { zoomAnimation: true });
+        var map = new L.Map('map', { zoomAnimation: true });
         map.fitBounds(VIEW);
 
         var SHAPES = { bounds: BOUNDS, degenerate: DEGENERATE, corners: CORNERS };
@@ -57,11 +70,11 @@
             muted: true, autoplay: true, loop: true
         }).addTo(map);
 
-
         window.__map = map;
         window.__corners = CORNERS;
         window.__bounds = BOUNDS;
         window.__shape = shape;
+        window.__leafletVersion = L.version;
         window.__ready = true;
     </script>
 </body>

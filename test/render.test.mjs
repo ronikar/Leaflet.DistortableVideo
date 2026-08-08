@@ -5,6 +5,11 @@
 // where Leaflet says those coordinates are. That catches a wrong matrix, a
 // dropped update and a NaN without being brittle about formatting.
 //
+// Every test runs against both Leaflet majors from the one build, because that
+// dual support is a promise the package makes and the two differ in ways this
+// code touches - Leaflet 2 dropped the lowercase factories and ships an ES
+// module by default.
+//
 // Skipped when playwright or its browser is missing, so `npm test` still works
 // on a machine that has not run `npx playwright install chromium` - but never in
 // CI, where a silent skip would turn a broken browser into a green build and
@@ -40,10 +45,12 @@ after(async () => {
     await server?.close();
 });
 
-async function open(query) {
+const LEAFLET_MAJORS = ['1', '2'];
+
+async function open(query, major) {
     const context = await browser.newContext({ viewport: VIEWPORT });
     const page = await context.newPage();
-    await page.goto(`${server.origin}/test/fixtures/overlay.html?${query}`, { waitUntil: 'load' });
+    await page.goto(`${server.origin}/test/fixtures/overlay.html?leaflet=${major}&${query}`, { waitUntil: 'load' });
     await page.waitForFunction(() => window.__ready === true);
     await page.waitForFunction(() => {
         const v = document.querySelector('#map video');
@@ -83,10 +90,10 @@ function cornerErrors(page) {
     });
 }
 
-describe('rendering', () => {
+for (const major of LEAFLET_MAJORS) describe(`rendering (Leaflet ${major})`, () => {
     test('a general quad lands on its four corners', async (t) => {
         if (unavailable) return t.skip(unavailable);
-        const { context, page } = await open('shape=corners');
+        const { context, page } = await open('shape=corners', major);
         try {
             const transform = await page.evaluate(() => getComputedStyle(document.querySelector('#map video')).transform);
             assert.doesNotMatch(transform, /NaN|Infinity/, 'transform must be finite');
@@ -101,7 +108,7 @@ describe('rendering', () => {
 
     test('an axis-aligned box still renders', async (t) => {
         if (unavailable) return t.skip(unavailable);
-        const { context, page } = await open('shape=bounds');
+        const { context, page } = await open('shape=bounds', major);
         try {
             const transform = await page.evaluate(() => getComputedStyle(document.querySelector('#map video')).transform);
             assert.doesNotMatch(transform, /NaN|Infinity/);
@@ -114,7 +121,7 @@ describe('rendering', () => {
     // viewport and nothing retried. The video kept no transform and no size.
     test('a map built in a hidden container recovers when shown', async (t) => {
         if (unavailable) return t.skip(unavailable);
-        const { context, page } = await open('shape=corners&hidden=1');
+        const { context, page } = await open('shape=corners&hidden=1', major);
         try {
             assert.equal(await page.evaluate(() => document.querySelector('#map video').style.transform), '',
                 'precondition: nothing is drawn while the container is hidden');
@@ -144,7 +151,7 @@ describe('rendering', () => {
     // its transform and painted at viewport size over the top-left of the map.
     test('a collapsed quad falls back instead of emitting a broken matrix', async (t) => {
         if (unavailable) return t.skip(unavailable);
-        const { context, page } = await open('shape=degenerate');
+        const { context, page } = await open('shape=degenerate', major);
         try {
             const transform = await page.evaluate(() => getComputedStyle(document.querySelector('#map video')).transform);
             assert.doesNotMatch(transform, /NaN|Infinity/, 'a degenerate quad must not produce a broken matrix');
@@ -155,7 +162,7 @@ describe('rendering', () => {
 
     test('panning and zooming keep the overlay on its corners', async (t) => {
         if (unavailable) return t.skip(unavailable);
-        const { context, page } = await open('shape=corners');
+        const { context, page } = await open('shape=corners', major);
         try {
             const before = await page.evaluate(() => document.querySelector('#map video').style.transform);
             await page.evaluate(() => {
@@ -175,15 +182,16 @@ describe('rendering', () => {
 
 // _bounds used to hold the plain corners object the projection wants, so every
 // inherited method that expected a LatLngBounds threw on it.
-describe('layer api', () => {
+for (const major of LEAFLET_MAJORS) describe(`layer api (Leaflet ${major})`, () => {
     test('getBounds returns a real LatLngBounds around the corners', async (t) => {
         if (unavailable) return t.skip(unavailable);
-        const { context, page } = await open('shape=corners');
+        const { context, page } = await open('shape=corners', major);
         try {
             const result = await page.evaluate(() => {
                 const bounds = window.__layer.getBounds();
                 const c = window.__corners;
                 return {
+                    version: window.__leafletVersion,
                     isLatLngBounds: bounds instanceof L.LatLngBounds,
                     north: bounds.getNorth(), south: bounds.getSouth(),
                     east: bounds.getEast(), west: bounds.getWest(),
@@ -196,6 +204,7 @@ describe('layer api', () => {
                 };
             });
 
+            assert.ok(result.version.startsWith(major), `fixture must be running Leaflet ${major}, got ${result.version}`);
             assert.ok(result.isLatLngBounds, 'getBounds() must return a LatLngBounds');
             for (const edge of ['north', 'south', 'east', 'west']) {
                 assert.equal(result[edge], result.expected[edge], `${edge} edge must hug the corners`);
@@ -205,17 +214,17 @@ describe('layer api', () => {
 
     test('the inherited LatLngBounds consumers all work', async (t) => {
         if (unavailable) return t.skip(unavailable);
-        const { context, page } = await open('shape=corners');
+        const { context, page } = await open('shape=corners', major);
         try {
             const failures = await page.evaluate(() => {
                 const layer = window.__layer, map = window.__map, bad = [];
                 const checks = {
                     'getBounds().getCenter()': () => layer.getBounds().getCenter(),
-                    'getBounds().contains()': () => layer.getBounds().contains(L.latLng(20, -115)),
+                    'getBounds().contains()': () => layer.getBounds().contains(new L.LatLng(20, -115)),
                     'getCenter()': () => layer.getCenter(),
                     'map.fitBounds(getBounds())': () => map.fitBounds(layer.getBounds()),
                     'bindPopup + openPopup': () => { layer.bindPopup('x'); layer.openPopup(); },
-                    'featureGroup.getBounds()': () => L.featureGroup([layer]).getBounds(),
+                    'featureGroup.getBounds()': () => new L.FeatureGroup([layer]).getBounds(),
                 };
                 for (const [name, fn] of Object.entries(checks)) {
                     try { fn(); } catch (e) { bad.push(`${name}: ${e.message.split('\n')[0]}`); }
@@ -229,7 +238,7 @@ describe('layer api', () => {
 
     test('getCorners round-trips the quad that getBounds cannot express', async (t) => {
         if (unavailable) return t.skip(unavailable);
-        const { context, page } = await open('shape=corners');
+        const { context, page } = await open('shape=corners', major);
         try {
             const result = await page.evaluate(() => {
                 const corners = window.__layer.getCorners();
@@ -252,7 +261,7 @@ describe('layer api', () => {
 
     test('setBounds and setCorners both keep _bounds a LatLngBounds', async (t) => {
         if (unavailable) return t.skip(unavailable);
-        const { context, page } = await open('shape=corners');
+        const { context, page } = await open('shape=corners', major);
         try {
             const result = await page.evaluate(() => {
                 const layer = window.__layer;
@@ -262,8 +271,8 @@ describe('layer api', () => {
                 const boundsCentre = layer.getCenter();
 
                 layer.setCorners({
-                    topLeft: L.latLng(31, -128), topRight: L.latLng(33, -101),
-                    bottomRight: L.latLng(14, -98), bottomLeft: L.latLng(12, -131),
+                    topLeft: new L.LatLng(31, -128), topRight: new L.LatLng(33, -101),
+                    bottomRight: new L.LatLng(14, -98), bottomLeft: new L.LatLng(12, -131),
                 });
                 const afterCorners = layer.getBounds() instanceof L.LatLngBounds;
 
