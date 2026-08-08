@@ -1,0 +1,21 @@
+{
+  "//": [
+    "Resolves 'leaflet-distortable-video' to the repo root rather than to src/index.d.ts",
+    "directly, so this also checks that package.json's `types` field points somewhere",
+    "real - a consumer reaches the declarations through that field, not by path.",
+    "Paths are relative to this file: TypeScript 7 removed baseUrl."
+  ],
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM"],
+    "module": "nodenext",
+    "skipLibCheck": false,
+    "types": [],
+    "paths": {
+      "leaflet-distortable-video": ["../.."]
+    }
+  },
+  "files": ["api.ts"]
+}
