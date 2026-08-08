@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      # dist/ is committed, so a clean build must not change it. This is the
+      # check the repo has been missing: it catches a stale dist, and it catches
+      # line-ending drift between a contributor's checkout and this runner -
+      # both of which have shipped to npm before now.
+      - name: dist matches a clean build
+        run: |
+          if ! git diff --quiet; then
+            echo "::error::dist/ differs from a clean build - run 'npm run build' and commit the result"
+            git --no-pager diff --stat
+            exit 1
+          fi
