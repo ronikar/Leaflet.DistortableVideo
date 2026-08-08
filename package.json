@@ -11,6 +11,7 @@
   ],
   "scripts": {
     "build": "rollup -c",
+    "prepack": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "rollup -c --watch",
     "demo:video": "node tools/make-demo-video.mjs"

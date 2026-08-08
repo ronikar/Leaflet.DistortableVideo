@@ -1,31 +1,50 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+name: Publish to npm
 
-name: Node.js Package
+# Dispatched by hand, but publishing from here rather than a laptop is what
+# makes the tarball reproducible: 1.0.0 and 1.0.1 were both published from a
+# checkout that rewrote line endings, so neither matches its own tag.
+#
+# Run it with dry_run left on first - that packs and validates without
+# publishing, so the workflow itself can be tested.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Pack and validate without publishing'
+        type: boolean
+        default: true
 
-on: workflow_dispatch
+permissions:
+  contents: read
+  id-token: write # npm provenance
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - run: npm ci
-      - run: npm run build
+      - uses: actions/checkout@v4
 
-  publish-npm:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           registry-url: https://registry.npmjs.org/
+          cache: npm
+
       - run: npm ci
-      - run: npm publish
+
+      # package.json has a prepack hook, so pack and publish both build first.
+      # The previous version of this workflow had a separate build job whose
+      # output was thrown away, and then published whatever dist/ happened to be
+      # committed on the dispatched ref.
+      - name: Pack and show what would ship
+        run: |
+          npm pack --dry-run
+          echo "version: $(node -p 'require("./package.json").version')"
+
+      - if: ${{ !inputs.dry_run }}
+        run: npm publish --provenance --access public
         env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
+
+      - if: ${{ inputs.dry_run }}
+        run: echo "::notice::dry run - nothing published. Re-run with dry_run unchecked to publish."
