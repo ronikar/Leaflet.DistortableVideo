@@ -138,6 +138,21 @@ describe('rendering', () => {
         } finally { await context.close(); }
     });
 
+    // Three corners on one line: distinct, so areSomeCornersEqual passes it to the
+    // projective solver, whose determinant is zero. Before the guard this produced
+    // matrix3d(Infinity, ...), which the browser rejects wholesale - the video lost
+    // its transform and painted at viewport size over the top-left of the map.
+    test('a collapsed quad falls back instead of emitting a broken matrix', async (t) => {
+        if (unavailable) return t.skip(unavailable);
+        const { context, page } = await open('shape=degenerate');
+        try {
+            const transform = await page.evaluate(() => getComputedStyle(document.querySelector('#map video')).transform);
+            assert.doesNotMatch(transform, /NaN|Infinity/, 'a degenerate quad must not produce a broken matrix');
+            assert.notEqual(transform, 'none', 'the browser must have accepted the transform');
+            assert.deepEqual(await page.evaluate(() => window.__errors), []);
+        } finally { await context.close(); }
+    });
+
     test('panning and zooming keep the overlay on its corners', async (t) => {
         if (unavailable) return t.skip(unavailable);
         const { context, page } = await open('shape=corners');
@@ -154,6 +169,117 @@ describe('rendering', () => {
             for (const [i, error] of (await cornerErrors(page)).entries()) {
                 assert.ok(error <= TOLERANCE, `corner ${i} is ${error.toFixed(1)}px out after pan and zoom`);
             }
+        } finally { await context.close(); }
+    });
+});
+
+// _bounds used to hold the plain corners object the projection wants, so every
+// inherited method that expected a LatLngBounds threw on it.
+describe('layer api', () => {
+    test('getBounds returns a real LatLngBounds around the corners', async (t) => {
+        if (unavailable) return t.skip(unavailable);
+        const { context, page } = await open('shape=corners');
+        try {
+            const result = await page.evaluate(() => {
+                const bounds = window.__layer.getBounds();
+                const c = window.__corners;
+                return {
+                    isLatLngBounds: bounds instanceof L.LatLngBounds,
+                    north: bounds.getNorth(), south: bounds.getSouth(),
+                    east: bounds.getEast(), west: bounds.getWest(),
+                    expected: {
+                        north: Math.max(c.topLeft.lat, c.topRight.lat, c.bottomRight.lat, c.bottomLeft.lat),
+                        south: Math.min(c.topLeft.lat, c.topRight.lat, c.bottomRight.lat, c.bottomLeft.lat),
+                        east: Math.max(c.topLeft.lng, c.topRight.lng, c.bottomRight.lng, c.bottomLeft.lng),
+                        west: Math.min(c.topLeft.lng, c.topRight.lng, c.bottomRight.lng, c.bottomLeft.lng),
+                    },
+                };
+            });
+
+            assert.ok(result.isLatLngBounds, 'getBounds() must return a LatLngBounds');
+            for (const edge of ['north', 'south', 'east', 'west']) {
+                assert.equal(result[edge], result.expected[edge], `${edge} edge must hug the corners`);
+            }
+        } finally { await context.close(); }
+    });
+
+    test('the inherited LatLngBounds consumers all work', async (t) => {
+        if (unavailable) return t.skip(unavailable);
+        const { context, page } = await open('shape=corners');
+        try {
+            const failures = await page.evaluate(() => {
+                const layer = window.__layer, map = window.__map, bad = [];
+                const checks = {
+                    'getBounds().getCenter()': () => layer.getBounds().getCenter(),
+                    'getBounds().contains()': () => layer.getBounds().contains(L.latLng(20, -115)),
+                    'getCenter()': () => layer.getCenter(),
+                    'map.fitBounds(getBounds())': () => map.fitBounds(layer.getBounds()),
+                    'bindPopup + openPopup': () => { layer.bindPopup('x'); layer.openPopup(); },
+                    'featureGroup.getBounds()': () => L.featureGroup([layer]).getBounds(),
+                };
+                for (const [name, fn] of Object.entries(checks)) {
+                    try { fn(); } catch (e) { bad.push(`${name}: ${e.message.split('\n')[0]}`); }
+                }
+                return bad;
+            });
+
+            assert.deepEqual(failures, [], 'no inherited LatLngBounds consumer may throw');
+        } finally { await context.close(); }
+    });
+
+    test('getCorners round-trips the quad that getBounds cannot express', async (t) => {
+        if (unavailable) return t.skip(unavailable);
+        const { context, page } = await open('shape=corners');
+        try {
+            const result = await page.evaluate(() => {
+                const corners = window.__layer.getCorners();
+                const same = ['topLeft', 'topRight', 'bottomRight', 'bottomLeft'].every((k) =>
+                    corners[k].lat === window.__corners[k].lat && corners[k].lng === window.__corners[k].lng);
+
+                // The hull is not the quad: its north-west is a point no corner
+                // sits on, which is exactly what getBounds() alone cannot express.
+                const northWest = window.__layer.getBounds().getNorthWest();
+                const hullIsWider = northWest.lat !== corners.topLeft.lat
+                    || northWest.lng !== corners.topLeft.lng;
+
+                return { same, hullIsWider };
+            });
+
+            assert.ok(result.same, 'getCorners() must return the corners as given');
+            assert.ok(result.hullIsWider, 'precondition: the fixture quad is not axis-aligned');
+        } finally { await context.close(); }
+    });
+
+    test('setBounds and setCorners both keep _bounds a LatLngBounds', async (t) => {
+        if (unavailable) return t.skip(unavailable);
+        const { context, page } = await open('shape=corners');
+        try {
+            const result = await page.evaluate(() => {
+                const layer = window.__layer;
+
+                layer.setBounds([[10, -120], [30, -100]]);
+                const afterBounds = layer.getBounds() instanceof L.LatLngBounds;
+                const boundsCentre = layer.getCenter();
+
+                layer.setCorners({
+                    topLeft: L.latLng(31, -128), topRight: L.latLng(33, -101),
+                    bottomRight: L.latLng(14, -98), bottomLeft: L.latLng(12, -131),
+                });
+                const afterCorners = layer.getBounds() instanceof L.LatLngBounds;
+
+                return {
+                    afterBounds, afterCorners,
+                    boundsCentre: [boundsCentre.lat, boundsCentre.lng],
+                    north: layer.getBounds().getNorth(),
+                    transform: document.querySelector('#map video').style.transform,
+                };
+            });
+
+            assert.ok(result.afterBounds, 'setBounds() must leave a LatLngBounds behind');
+            assert.ok(result.afterCorners, 'setCorners() must leave a LatLngBounds behind');
+            assert.deepEqual(result.boundsCentre, [20, -110], 'centre of the box passed to setBounds');
+            assert.equal(result.north, 33, 'bounds must track the new corners');
+            assert.doesNotMatch(result.transform, /NaN|Infinity/);
         } finally { await context.close(); }
     });
 });

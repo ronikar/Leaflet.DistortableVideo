@@ -10,6 +10,9 @@
 // mapping pre-scaled by 1/w and 1/h, so there is no linear system to solve:
 // one 2x2 determinant replaces the 8x8 Gaussian elimination this used to hand
 // to numeric.solve(). Same result to ~1e-10 px, and no dependency.
+//
+// Returns null when the target has no projective transform, so callers can fall
+// back rather than serialise a matrix the browser will throw away.
 export function findProjectiveMatrix(origin, target) {
     const width = origin.bottomRight.x - origin.topLeft.x;
     const height = origin.bottomRight.y - origin.topLeft.y;
@@ -39,6 +42,15 @@ export function findProjectiveMatrix(origin, target) {
         const dx1 = x1 - x2, dy1 = y1 - y2;
         const dx2 = x3 - x2, dy2 = y3 - y2;
         const denominator = dx1 * dy2 - dx2 * dy1;
+
+        // Zero exactly when topRight, bottomRight and bottomLeft are collinear:
+        // the quad has collapsed onto a line and no projective map exists. Left
+        // undivided this yields Infinity or NaN, which the browser rejects as a
+        // whole - dropping the transform and painting the video at viewport size
+        // in the top-left corner. Rounding to integer pixels makes a thin quad
+        // reach this exactly, so it is reachable by zooming out, not just by
+        // passing degenerate corners.
+        if (!denominator) return null;
 
         a13 = (sumX * dy2 - dx2 * sumY) / denominator;
         a23 = (dx1 * sumY - sumX * dy1) / denominator;

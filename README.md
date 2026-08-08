@@ -116,6 +116,18 @@ var corners= {
 overlay.setCorners(corners);
 ```
 
+### getCorners() and getBounds()
+
+`getCorners()` returns the four corners as given, which is what round-trips with
+`setCorners()`. `getBounds()` is inherited from Leaflet and returns their
+axis-aligned `LatLngBounds` - useful for `map.fitBounds(overlay.getBounds())`,
+but it cannot describe a rotated or distorted quad.
+
+```js
+overlay.getCorners(); // { topLeft, topRight, bottomRight, bottomLeft }
+map.fitBounds(overlay.getBounds());
+```
+
 ### Rotated maps
 
 The overlay works on a rotated map without any extra configuration. The corners are
