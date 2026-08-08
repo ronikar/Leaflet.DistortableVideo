@@ -34,3 +34,10 @@ jobs:
             git --no-pager diff --stat
             exit 1
           fi
+
+      # The render tests drive a real browser: the plugin's whole job is a CSS
+      # transform, and jsdom has no layout, so map.getSize() would be 0x0 and
+      # every geometry assertion meaningless.
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm test

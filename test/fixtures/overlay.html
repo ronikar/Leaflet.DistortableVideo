@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>overlay fixture</title>
+    <link rel="stylesheet" href="/examples/vendor/leaflet.css">
+    <style>
+        html, body { margin: 0; }
+        /* Fixed size so the geometry assertions are deterministic. */
+        #wrap { width: 900px; height: 620px; }
+        #map { width: 900px; height: 620px; }
+        .hidden { display: none; }
+    </style>
+</head>
+
+<body>
+    <div id="wrap"><div id="map"></div></div>
+
+    <script src="/examples/vendor/leaflet.js"></script>
+    <script src="/dist/index.js"></script>
+    <script>
+        // ?hidden=1 builds the map while its container is display:none, which is
+        // the tab / modal / accordion case. ?shape=corners|bounds picks the
+        // solver branch: a general quad, or an axis-aligned box.
+        var params = new URLSearchParams(location.search);
+        if (params.get('hidden') === '1') document.getElementById('wrap').className = 'hidden';
+
+        var CORNERS = {
+            topLeft: L.latLng(30.6, -129),
+            topRight: L.latLng(32, -100),
+            bottomRight: L.latLng(13, -97),
+            bottomLeft: L.latLng(13, -130)
+        };
+        var BOUNDS = [[32, -130], [13, -100]];
+        var VIEW = [[6.9, -133.2], [37.1, -96.8]];
+
+        window.__errors = [];
+        window.addEventListener('error', function (e) { window.__errors.push(String(e.message)); });
+
+        var map = L.map('map', { zoomAnimation: true });
+        map.fitBounds(VIEW);
+
+        var shape = params.get('shape') === 'bounds' ? BOUNDS : CORNERS;
+        window.__layer = L.distortableVideoOverlay('/examples/media/pacific.mp4', shape, {
+            muted: true, autoplay: true, loop: true
+        }).addTo(map);
+
+        // A plain image overlay on the same footprint is the control: whatever the
+        // plugin does, this is where the ground actually is.
+        window.__control = L.imageOverlay('/examples/media/basemap.jpg', BOUNDS).addTo(map);
+
+        window.__map = map;
+        window.__corners = CORNERS;
+        window.__bounds = BOUNDS;
+        window.__ready = true;
+    </script>
+</body>
+
+</html>
