@@ -3,7 +3,13 @@
     "Resolves 'leaflet-distortable-video' to the repo root rather than to src/index.d.ts",
     "directly, so this also checks that package.json's `types` field points somewhere",
     "real - a consumer reaches the declarations through that field, not by path.",
-    "Paths are relative to this file: TypeScript 7 removed baseUrl."
+    "Paths are relative to this file: TypeScript 7 removed baseUrl.",
+    "",
+    "skipLibCheck is off so src/index.d.ts is itself checked, which is the point.",
+    "noUnusedLocals earns its keep: the assertions are calls rather than bindings,",
+    "so a stray binding means a dead test. noUnusedParameters checks nothing today",
+    "- the only parameters are in a bodyless `declare` - and is kept as a guard for",
+    "if a helper with a body is ever added."
   ],
   "compilerOptions": {
     "strict": true,

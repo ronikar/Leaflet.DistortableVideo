@@ -131,3 +131,25 @@ overlay.setCorners([[32, -130], [13, -100]]);
 
 // @ts-expect-error - setBounds takes bounds, not a corners object
 overlay.setBounds(corners);
+
+// Every callable needs its own negative test, not just the top-level factory:
+// widening a parameter on the constructor or on either registration leaves the
+// return type untouched, so expectType above stays green through it.
+
+// @ts-expect-error - the constructor needs all four corners
+new DistortableVideoOverlay('a.mp4', { topLeft: L.latLng(1, 2) });
+
+// @ts-expect-error - the constructor rejects raw numbers as corners
+new DistortableVideoOverlay('a.mp4', { topLeft: 1, topRight: 2, bottomRight: 3, bottomLeft: 4 });
+
+// @ts-expect-error - the registered factory needs all four corners
+L.distortableVideoOverlay('a.mp4', { topLeft: L.latLng(1, 2) });
+
+// @ts-expect-error - the registered factory rejects raw numbers as corners
+L.distortableVideoOverlay('a.mp4', { topLeft: 1, topRight: 2, bottomRight: 3, bottomLeft: 4 });
+
+// @ts-expect-error - the registered class needs all four corners
+new L.DistortableVideoOverlay('a.mp4', { topLeft: L.latLng(1, 2) });
+
+// @ts-expect-error - bounds are required on the registered factory
+L.distortableVideoOverlay('a.mp4');
