@@ -39,6 +39,15 @@ jobs:
 
       - run: npm ci
 
+      # Nothing stopped a regressed build from shipping before this: the workflow
+      # can be dispatched against any ref, so "CI was green on master" was not a
+      # guarantee about the commit being published. The suite drives a real
+      # browser and covers both Leaflet majors, and it runs on a dry run too, so
+      # a dry run now actually validates something.
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm test
+
       # package.json has a prepack hook, so pack and publish both build first.
       # The previous version of this workflow had a separate build job whose
       # output was thrown away, and then published whatever dist/ happened to be
