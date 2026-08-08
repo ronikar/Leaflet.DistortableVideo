@@ -9,13 +9,22 @@
     "strict": true,
     "noEmit": true,
     "target": "ES2020",
-    "lib": ["ES2020", "DOM"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "module": "nodenext",
     "skipLibCheck": false,
     "types": [],
     "paths": {
-      "leaflet-distortable-video": ["../.."]
-    }
+      "leaflet-distortable-video": [
+        "../.."
+      ]
+    },
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
-  "files": ["api.ts"]
+  "files": [
+    "api.ts"
+  ]
 }
