@@ -88,11 +88,3 @@ fromCorners.getCorners('nope');
 
 // @ts-expect-error - not a real option
 distortableVideoOverlay('a.mp4', corners, { notAnOption: true });
-
-// Keep every binding used so noUnusedLocals could be turned on later.
-export const used = [
-    fromCorners, fromClockwise, fromBounds, fromLatLngBounds, withOptions,
-    fromArrayOfSources, fromElement, constructed, viaDefault, chainedCorners,
-    chainedClockwise, chainedBounds, gotCorners, cornerLat, bounds, centre,
-    contains, added, popped, viaL, tooFew,
-];
