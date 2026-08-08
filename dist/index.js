@@ -16,6 +16,9 @@
     // mapping pre-scaled by 1/w and 1/h, so there is no linear system to solve:
     // one 2x2 determinant replaces the 8x8 Gaussian elimination this used to hand
     // to numeric.solve(). Same result to ~1e-10 px, and no dependency.
+    //
+    // Returns null when the target has no projective transform, so callers can fall
+    // back rather than serialise a matrix the browser will throw away.
     function findProjectiveMatrix(origin, target) {
         const width = origin.bottomRight.x - origin.topLeft.x;
         const height = origin.bottomRight.y - origin.topLeft.y;
@@ -45,6 +48,15 @@
             const dx1 = x1 - x2, dy1 = y1 - y2;
             const dx2 = x3 - x2, dy2 = y3 - y2;
             const denominator = dx1 * dy2 - dx2 * dy1;
+
+            // Zero exactly when topRight, bottomRight and bottomLeft are collinear:
+            // the quad has collapsed onto a line and no projective map exists. Left
+            // undivided this yields Infinity or NaN, which the browser rejects as a
+            // whole - dropping the transform and painting the video at viewport size
+            // in the top-left corner. Rounding to integer pixels makes a thin quad
+            // reach this exactly, so it is reachable by zooming out, not just by
+            // passing degenerate corners.
+            if (!denominator) return null;
 
             a13 = (sumX * dy2 - dx2 * sumY) / denominator;
             a23 = (dx1 * sumY - sumX * dy1) / denominator;
@@ -145,7 +157,7 @@
     const DistortableVideoOverlay = L.VideoOverlay.extend({
         initialize: function (element, bounds, options) {
             this._url = element;
-            this._bounds = this._getCorners(bounds);
+            this._setCorners(bounds);
             L.Util.setOptions(this, options);
         },
 
@@ -154,12 +166,19 @@
         },
 
         setCorners: function (corners) {
-            this._bounds = this._getCorners(corners);
+            this._setCorners(corners);
 
             if (this._map) {
                 this._reset();
             }
             return this;
+        },
+
+        // The four corners as given. getBounds() is the axis-aligned hull, which
+        // cannot describe a rotated or distorted quad, so this is the accessor that
+        // round-trips with setCorners().
+        getCorners: function () {
+            return this._corners;
         },
 
         // The inherited event map has no resize, so a map that starts hidden or
@@ -222,22 +241,28 @@
         },
 
         _projectVideoOnMap: function (origin, pixelicPositionProvider) {
-            const target = _getTargetCorners(this._bounds, pixelicPositionProvider);
+            const target = _getTargetCorners(this._corners, pixelicPositionProvider);
 
-            const cssTransformValue = areSomeCornersEqual(target)
-                ? this._projectAsRectangle(origin, target)
+            // areSomeCornersEqual only catches coincident corners. A quad can also
+            // collapse with all four distinct - three of them collinear - which the
+            // projective solver reports by returning null.
+            const projective = areSomeCornersEqual(target)
+                ? null
                 : this._projectWithProjectiveMatrix(origin, target);
 
-            setTransform(this._image, cssTransformValue);
+            setTransform(this._image, projective || this._projectAsRectangle(origin, target));
         },
 
         _projectWithProjectiveMatrix: function (origin, target) {
             const matrix3d = findProjectiveMatrix(origin, target);
+            if (!matrix3d) return null;
+
             return projectiveMatrixToCssValue(matrix3d);
         },
 
-        // Two or more target corners coincide, so the quad has collapsed and the
-        // projective system would be singular. Fall back to a plain scale/translate.
+        // The quad has collapsed - corners coincide, or three of them are collinear -
+        // so the projective system is singular. Fall back to a plain scale/translate
+        // onto the target's bounding box.
         _projectAsRectangle: function (origin, target) {
             const xCoordinates = getXCoordinates(target);
             const yCoordinates = getYCoordinates(target);
@@ -251,6 +276,20 @@
             const afterScalingSize = { width: maxX - minX, height: maxY - minY };
 
             return `${getTranslate3dCssValue(minX, minY)} ${getScale3dCssValue(size, afterScalingSize)}`;
+        },
+
+        // _corners drives the projection. _bounds is their axis-aligned hull and has
+        // to be a real LatLngBounds: everything inherited reads it and calls
+        // LatLngBounds methods on it - getBounds(), getCenter(), popup placement,
+        // map.fitBounds(layer.getBounds()) - all of which threw while this held a
+        // plain corners object.
+        _setCorners: function (value) {
+            const corners = this._getCorners(value);
+
+            this._corners = corners;
+            this._bounds = new L.LatLngBounds([
+                corners.topLeft, corners.topRight, corners.bottomRight, corners.bottomLeft
+            ]);
         },
 
         _getCorners: function (value) {

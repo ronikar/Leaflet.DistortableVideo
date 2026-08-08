@@ -1,6 +1,6 @@
 {
   "name": "leaflet-distortable-video",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Enable to distort videos on Leaflet maps.",
   "main": "dist/index.js",
   "types": "src/index.d.ts",
@@ -11,7 +11,8 @@
   ],
   "scripts": {
     "build": "rollup -c",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepack": "npm run build",
+    "test": "node --test test/exports.test.mjs test/render.test.mjs",
     "watch": "rollup -c --watch",
     "demo:video": "node tools/make-demo-video.mjs"
   },
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@rollup/plugin-terser": "^1.0.0",
     "@types/leaflet": "^1.9.22",
+    "playwright": "^1.56.0",
     "rollup": "^4.53.3"
   }
 }

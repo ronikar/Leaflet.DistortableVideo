@@ -17,6 +17,8 @@ export class DistortableVideoOverlay extends L.VideoOverlay {
     constructor(video: Video, bounds: Bounds, options?: L.VideoOverlayOptions);
     setBounds(bounds: L.LatLngBoundsExpression): this;
     setCorners(corners: GeographicalCorners | ClockwiseCorners): this;
+    /** The four corners as given. getBounds() is their axis-aligned hull. */
+    getCorners(): GeographicalCorners;
 }
 
 export function distortableVideoOverlay(

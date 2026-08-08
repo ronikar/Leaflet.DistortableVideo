@@ -1,31 +1,57 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+name: Publish to npm
 
-name: Node.js Package
+# Dispatched by hand, but publishing from here rather than a laptop is what
+# makes the tarball reproducible: 1.0.0 and 1.0.1 were both published from a
+# checkout that rewrote line endings, so neither matches its own tag.
+#
+# Run it with dry_run left on first - that packs and validates without
+# publishing, so the workflow itself can be tested.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Pack and validate without publishing'
+        type: boolean
+        default: true
 
-on: workflow_dispatch
+permissions:
+  contents: read
+  id-token: write # OIDC, for both trusted publishing and provenance
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - run: npm ci
-      - run: npm run build
+      - uses: actions/checkout@v4
 
-  publish-npm:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           registry-url: https://registry.npmjs.org/
+          cache: npm
+
+      # Authentication is npm's trusted publisher for this repo, configured on
+      # npmjs.com - no token, nothing to expire, and it is exempt from the
+      # account's "2FA on writes" rule that no token could satisfy from CI.
+      #
+      # It needs npm 11.5.1+, which no Node ships yet - 22 still bundles npm 10.
+      - run: npm install -g npm@latest
+
       - run: npm ci
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+
+      # package.json has a prepack hook, so pack and publish both build first.
+      # The previous version of this workflow had a separate build job whose
+      # output was thrown away, and then published whatever dist/ happened to be
+      # committed on the dispatched ref.
+      - name: Pack and show what would ship
+        run: |
+          npm pack --dry-run
+          echo "version: $(node -p 'require("./package.json").version')"
+
+      # No NODE_AUTH_TOKEN: if one is present npm authenticates with it instead
+      # of OIDC, which lands straight back on the 2FA prompt.
+      - if: ${{ !inputs.dry_run }}
+        run: npm publish --provenance --access public
+
+      - if: ${{ inputs.dry_run }}
+        run: echo "::notice::dry run - nothing published. Re-run with dry_run unchecked to publish."
