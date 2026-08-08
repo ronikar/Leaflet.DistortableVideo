@@ -11,7 +11,7 @@
 // to L.Bounds inside the leaflet augmentation.
 
 import * as L from 'leaflet';
-import defaultExport, {
+import {
     DistortableVideoOverlay,
     distortableVideoOverlay,
     GeographicalCorners,
@@ -53,7 +53,12 @@ expectType<DistortableVideoOverlay>()(distortableVideoOverlay(['a.mp4', 'a.webm'
 expectType<DistortableVideoOverlay>()(
     distortableVideoOverlay(document.createElement('video'), corners));
 expectType<DistortableVideoOverlay>()(new DistortableVideoOverlay('a.mp4', corners));
-expectType<DistortableVideoOverlay>()(defaultExport('a.mp4', corners));
+
+// No assertion for the default export. `export default distortableVideoOverlay`
+// only holds under a bundler's interop; with native Node ESM `import d from` of
+// this CJS build hands over module.exports, so `d('a.mp4', corners)` throws
+// "d is not a function". Pinning it here would defend the wrong behaviour - the
+// README documents the named imports instead.
 
 // The exported aliases are part of the public surface, so pin their shape too.
 expectType<VideoSource>()('a.mp4' as string | string[] | HTMLVideoElement);
@@ -87,6 +92,10 @@ expectType<DistortableVideoOverlay>()(overlay.bindPopup('hello'));
 
 expectType<DistortableVideoOverlay>()(L.distortableVideoOverlay('a.mp4', corners));
 expectType<DistortableVideoOverlay>()(L.distortableVideoOverlay('a.mp4', clockwise));
+
+// The class is registered too. It was missing from the augmentation entirely,
+// so `new L.DistortableVideoOverlay(...)` was a type error for script-tag users.
+expectType<DistortableVideoOverlay>()(new L.DistortableVideoOverlay('a.mp4', corners));
 
 // --- calls that must stay rejected -------------------------------------------
 // tsc errors on an *unused* @ts-expect-error, so if any of these stops being an
