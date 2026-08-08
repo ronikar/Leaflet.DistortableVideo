@@ -6,7 +6,9 @@
 // dropped update and a NaN without being brittle about formatting.
 //
 // Skipped when playwright or its browser is missing, so `npm test` still works
-// on a machine that has not run `npx playwright install chromium`.
+// on a machine that has not run `npx playwright install chromium` - but never in
+// CI, where a silent skip would turn a broken browser into a green build and
+// quietly stop protecting anything.
 
 import { test, before, after, describe } from 'node:test';
 import assert from 'node:assert/strict';
@@ -25,7 +27,9 @@ before(async () => {
         ({ chromium } = await import('playwright'));
         browser = await chromium.launch();
     } catch (error) {
-        unavailable = `playwright unavailable: ${error.message.split('\n')[0]}`;
+        const why = `playwright unavailable: ${error.message.split('\n')[0]}`;
+        if (process.env.CI) throw new Error(`${why} - refusing to skip the render tests in CI`);
+        unavailable = why;
         return;
     }
     server = await serve(root);
@@ -115,11 +119,14 @@ describe('rendering', () => {
             assert.equal(await page.evaluate(() => document.querySelector('#map video').style.transform), '',
                 'precondition: nothing is drawn while the container is hidden');
 
-            await page.evaluate(async () => {
+            await page.evaluate(() => {
                 document.getElementById('wrap').className = '';
                 window.__map.invalidateSize();
-                await new Promise((r) => setTimeout(r, 400));
             });
+            await page.waitForFunction(() => {
+                const t = document.querySelector('#map video').style.transform;
+                return t !== '' && !t.includes('NaN');
+            }, null, { timeout: 10000 });
 
             const transform = await page.evaluate(() => getComputedStyle(document.querySelector('#map video')).transform);
             assert.notEqual(transform, 'none', 'a transform must be applied once the container has a size');
@@ -135,11 +142,14 @@ describe('rendering', () => {
         if (unavailable) return t.skip(unavailable);
         const { context, page } = await open('shape=corners');
         try {
-            await page.evaluate(async () => {
+            const before = await page.evaluate(() => document.querySelector('#map video').style.transform);
+            await page.evaluate(() => {
                 window.__map.panBy([180, 120], { animate: false });
                 window.__map.setZoom(window.__map.getZoom() + 1, { animate: false });
-                await new Promise((r) => setTimeout(r, 400));
             });
+            await page.waitForFunction(
+                (previous) => document.querySelector('#map video').style.transform !== previous,
+                before, { timeout: 10000 });
 
             for (const [i, error] of (await cornerErrors(page)).entries()) {
                 assert.ok(error <= TOLERANCE, `corner ${i} is ${error.toFixed(1)}px out after pan and zoom`);

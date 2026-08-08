@@ -46,9 +46,6 @@
             muted: true, autoplay: true, loop: true
         }).addTo(map);
 
-        // A plain image overlay on the same footprint is the control: whatever the
-        // plugin does, this is where the ground actually is.
-        window.__control = L.imageOverlay('/examples/media/basemap.jpg', BOUNDS).addTo(map);
 
         window.__map = map;
         window.__corners = CORNERS;
