@@ -14,9 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Same major as the publish workflow: that one rebuilds dist/ via prepack,
+      # so verifying the committed dist on a different Node would be checking a
+      # different build than the one that ships.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - run: npm ci

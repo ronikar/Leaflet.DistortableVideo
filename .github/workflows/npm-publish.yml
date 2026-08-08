@@ -16,7 +16,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write # npm provenance
+  id-token: write # OIDC, for both trusted publishing and provenance
 
 jobs:
   publish:
@@ -26,9 +26,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org/
           cache: npm
+
+      # Authentication is npm's trusted publisher for this repo, configured on
+      # npmjs.com - no token, nothing to expire, and it is exempt from the
+      # account's "2FA on writes" rule that no token could satisfy from CI.
+      #
+      # It needs npm 11.5.1+, which no Node ships yet - 22 still bundles npm 10.
+      - run: npm install -g npm@latest
 
       - run: npm ci
 
@@ -41,10 +48,10 @@ jobs:
           npm pack --dry-run
           echo "version: $(node -p 'require("./package.json").version')"
 
+      # No NODE_AUTH_TOKEN: if one is present npm authenticates with it instead
+      # of OIDC, which lands straight back on the 2FA prompt.
       - if: ${{ !inputs.dry_run }}
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}
 
       - if: ${{ inputs.dry_run }}
         run: echo "::notice::dry run - nothing published. Re-run with dry_run unchecked to publish."
