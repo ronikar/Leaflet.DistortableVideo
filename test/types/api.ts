@@ -67,6 +67,10 @@ const popped: DistortableVideoOverlay = fromCorners.bindPopup('hello');
 
 const viaL: DistortableVideoOverlay = L.distortableVideoOverlay('a.mp4', corners);
 
+// The class is registered alongside the factory, and the README documents it.
+// It was missing from the augmentation, so this was a TS2339.
+const viaLClass: DistortableVideoOverlay = new L.DistortableVideoOverlay('a.mp4', corners);
+
 // --- calls that must stay rejected -------------------------------------------
 // If any of these stops erroring the declarations have gone slack, and tsc fails
 // the build on the unused directive.

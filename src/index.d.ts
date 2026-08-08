@@ -31,10 +31,20 @@ export function distortableVideoOverlay(
 
 export default distortableVideoOverlay;
 
-// Also registered on L for <script> tag usage, but not when Leaflet resolves as
-// an ES module - prefer the exports above under a bundler.
+// Both of these are registered on L for <script> tag usage, but not when Leaflet
+// resolves as an ES module - prefer the exports above under a bundler.
+//
+// Referred to through aliases because inside the augmentation Leaflet's own
+// exports win the name lookup, and `const DistortableVideoOverlay` below would
+// otherwise shadow the class. That shadowing is what made the old `Bounds` alias
+// resolve to L.Bounds. These names cannot collide with anything Leaflet exports.
+type OverlayInstance = DistortableVideoOverlay;
+type OverlayStatic = typeof DistortableVideoOverlay;
+
 declare module 'leaflet' {
     function distortableVideoOverlay(
         video: VideoSource, bounds: VideoBounds, options?: L.VideoOverlayOptions
-    ): DistortableVideoOverlay;
+    ): OverlayInstance;
+
+    const DistortableVideoOverlay: OverlayStatic;
 }
